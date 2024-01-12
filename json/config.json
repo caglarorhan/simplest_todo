@@ -1,0 +1,20 @@
+{
+  "defaultLang": "en",
+  "defaultStyleFile": "simToDo_default.css",
+  "alternateStyleFile": "simToDo_alternate.css",
+  "todoInputContainerID": "simToDo-input-container",
+  "todoListContainer": "simToDo-list-container",
+  "todoFilterContainerID": "simToDo-filter-container",
+  "itemPerPage": "item-per-page",
+  "maxPagingButton": "max-paging-button",
+  "textLabels":{
+    "tr":{
+      "saveButton":"TODO kaydet",
+      "headerText":"Simplest TODO Uygulamasi"
+    },
+    "en":{
+      "saveButton": "Save TODO",
+      "headerText":"Simplest TODO Application"
+    }
+  }
+}

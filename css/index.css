@@ -1,0 +1,41 @@
+body{
+    font-family: Arial, serif;
+}
+
+.simToDo-toDoInput{
+    width: 400px;
+    height: 400px;
+}
+
+datalist {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    justify-items: stretch;
+    writing-mode: vertical-lr;
+    width: 200px;
+}
+
+label{
+    font-weight: bold;
+
+}
+
+option {
+    padding: 0;
+    font-weight: bold;
+    transform: rotate(-90deg);
+    margin-top: -20px;
+    cursor: pointer;
+
+}
+
+input[type="range"] {
+    width: 200px;
+    margin: 0;
+    -webkit-appearance: none;
+    border: 1px solid blue;
+    border-radius: 8px;
+    margin-bottom: 0;
+    cursor: pointer;
+}

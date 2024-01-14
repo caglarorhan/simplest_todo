@@ -178,7 +178,7 @@ let simToDo = {
             printToDo(j);
         }
         let pagingButtonElements = this.createPagination({currentPageNo:pageNo})
-        todoContainer.appendChild(pagingButtonElements);
+        todoContainer.insertAdjacentElement('afterbegin',pagingButtonElements);
     },
     updateToDo(command={uuid:'', job:'show', data:{}}){
         if(!command.uuid){

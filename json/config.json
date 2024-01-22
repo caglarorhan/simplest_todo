@@ -17,13 +17,19 @@
     }
   },
   "mainContainerId":"mainToDoContainer",
-  "mainContainerStyleClass": "",
-  "toDoInputContainerId":"todoInputContainer",
-  "todoInputContainerStyleClass": "",
-  "toDoInputId":"todoInput",
-  "todoInputStyleClass": "",
-  "toDoContainerId":"todoListContainer",
-  "todoListContainerStyleClass": "",
+  "mainContainerStyleClass": "mainToDoContainer",
+
+  "toDoInputContainerId":"toDoInputContainer",
+  "todoInputContainerStyleClass": "toDoInputContainer",
+
+  "toDoInputTextareaId":"toDoInputTextarea",
+  "todoInputTextareaStyleClass": "toDoInputTextarea",
+
+  "toDoListContainerId":"toDoListContainer",
+  "toDoListContainerStyleClass": "toDoListContainer",
+
+  "toDoBoxInListStyleClass": "toDoBoxInList",
+
   "filterContainerId":"filterContainer",
-  "": ""
+  "filterContainerStyleClass": "filterContainer"
 }

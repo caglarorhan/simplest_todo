@@ -75,40 +75,38 @@ let simToDo = {
     },
     createUISkeleton() {
         this.targetContainer = document.querySelector(`#${conf.mainContainerId}`) ?? document.body;
-        this.targetContainer.style.display = 'flex';
-        this.targetContainer.style.flexDirection = 'row';
+        this.targetContainer.classList.add(conf.mainContainerStyleClass);
     },
     createToDoElements() {
-        let toDoInput = this.createElm('div');
-        toDoInput.id = conf.toDoInputContainerId;
+        let toDoInputContainer = this.createElm('div');
+        toDoInputContainer.id = conf.toDoInputContainerId;
+        toDoInputContainer.classList.add(conf.todoInputContainerStyleClass);
 
-        let toDoContainer = this.createElm('div');
-        toDoContainer.id = conf.toDoContainerId;
+        let toDoListContainer = this.createElm('div');
+        toDoListContainer.id = conf.toDoListContainerId;
+        toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
+
         let headerText = this.createElm('h2');
-        let toDoBody = this.createElm('textarea');
-        toDoBody.id = conf.toDoInputId;
+        let toDoInputTextarea = this.createElm('textarea');
+        toDoInputTextarea.id = conf.toDoInputTextareaId;
+        toDoInputTextarea.classList.add(conf.todoInputTextareaStyleClass);
         let saveToDoButton = this.createElm('button');
         //
 
-        this.targetContainer.appendChild(toDoInput);
-        this.targetContainer.appendChild(toDoContainer);
-        //
-        toDoInput.style.flexGrow = "1";
-        toDoContainer.style.flexGrow = "1";
-        toDoContainer.style.display = "flex";
-        toDoContainer.style.flexDirection = 'column';
+        this.targetContainer.appendChild(toDoInputContainer);
+        this.targetContainer.appendChild(toDoListContainer);
 
         saveToDoButton.textContent = conf.textLabels[conf.defaultLang].saveButton;
         headerText.textContent = conf.textLabels[conf.defaultLang].headerText;
-        toDoInput.appendChild(headerText);
-        toDoInput.appendChild(toDoBody);
-        toDoInput.appendChild(saveToDoButton);
+        toDoInputContainer.appendChild(headerText);
+        toDoInputContainer.appendChild(toDoInputTextarea);
+        toDoInputContainer.appendChild(saveToDoButton);
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
     },
     prepareNewToDoObject() {
-        let toDoBody = document.getElementById(conf.toDoInputId);
-        console.log(toDoBody);
-        if (!toDoBody.value) {
+        let toDoInputTextarea = document.getElementById(conf.toDoInputTextareaId);
+        console.log(toDoInputTextarea);
+        if (!toDoInputTextarea.value) {
             this.giveMessage({
                 type: 'error',
                 message: `ToDo input must be at least ${this.minInputLength} characters long!`
@@ -116,7 +114,7 @@ let simToDo = {
         }
         let newToDoObject = {
             uuid: this.createUID(),
-            body: toDoBody.value,
+            body: toDoInputTextarea.value,
             created: Date.now(),
             updated: Date.now(),
             dependencies: [],
@@ -133,15 +131,16 @@ let simToDo = {
         this.stateToStorage();
     },
     clearToDoInput() {
-        console.log(conf.toDoInputId)
-        document.getElementById(conf.toDoInputId).value = '';
+        console.log(conf.toDoInputTextareaId)
+        document.getElementById(conf.toDoInputTextareaId).value = '';
     },
     drawFilters() {
         let filterOptionsContainer = this.createFilterOptionsContainer(conf.filterContainerId);
 
     },
     drawToDos(pageNo = 1) {
-        let todoContainer = document.getElementById(conf.toDoContainerId);
+        let toDoListContainer = document.getElementById(conf.toDoListContainerId);
+        toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
         let firstItemIndex = (pageNo - 1) * this.activeState.itemPerPage;
         let lastItemIndex = (pageNo * this.activeState.itemPerPage) - 1;
         lastItemIndex = (lastItemIndex < this.activeState.todos.length) ? lastItemIndex : this.activeState.todos.length - 1;
@@ -160,25 +159,23 @@ let simToDo = {
             theCheckBox.addEventListener("click", () => {
                 this.updateToDo({uuid: theToDo.uuid, job: 'update', data: {done: theCheckBox.checked}})
             })
-            todoBox.style.border = "1px solid green";
-            todoBox.style.marginBottom = "5px";
-            todoBox.style.padding = "5px";
+            todoBox.classList.add(conf.toDoBoxInListStyleClass);
             todoBox.innerHTML += theToDo.body;
             todoBox.innerHTML += '<br>indexNO: ' + indexNo;
             todoBox.innerHTML += '<br>UUID: ' + theToDo.uuid;
             todoBox.innerHTML += '<br>Created: ' + readableDateData;
             todoBox.innerHTML += '<br>Done:';
             todoBox.appendChild(theCheckBox);
-            todoContainer.appendChild(todoBox);
+            toDoListContainer.appendChild(todoBox);
         }
-        todoContainer.innerHTML = '';
-        todoContainer.innerHTML += `<span style="font-weight: bold">TOTAL ENTRIES: ${this.activeState.todos.length.toString()}</span>`;
+        toDoListContainer.innerHTML = '';
+        toDoListContainer.innerHTML += `<span style="font-weight: bold">TOTAL ENTRIES: ${this.activeState.todos.length.toString()}</span>`;
 
         for (let j = firstItemIndex; j <= lastItemIndex; j++) {
             printToDo(j);
         }
         let pagingButtonElements = this.createPagination({currentPageNo: pageNo})
-        todoContainer.insertAdjacentElement('afterbegin', pagingButtonElements);
+        toDoListContainer.insertAdjacentElement('afterbegin', pagingButtonElements);
     },
     updateToDo(command = {uuid: '', job: 'show', data: {}}) {
         if (!command.uuid) {

@@ -2,12 +2,35 @@ body{
     font-family: Arial, serif;
 }
 
+.mainToDoContainer{
+    display: flex;
+    flex-direction: row;
+}
 
+.todoInputContainer{
+    flex-grow: 1;
+}
 
-#todoInput{
+.toDoListContainer{
+    display: flex;
+    margin-left:auto;
+    flex-direction: column;
+    width:40%;
+
+}
+
+.toDoInputTextarea{
     width: 400px;
     height: 400px;
 }
+
+.toDoBoxInList{
+    border: 1px solid green;
+    margin-bottom: 5px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
 
 datalist {
     display: flex;

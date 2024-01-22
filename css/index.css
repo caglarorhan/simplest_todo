@@ -5,6 +5,7 @@ body{
 .mainToDoContainer{
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
 }
 
 .todoInputContainer{
@@ -31,6 +32,10 @@ body{
     border-radius: 5px;
 }
 
+.toDoFilterContainer{
+    border: 1px solid lightgray;
+    height: 100px;
+}
 
 datalist {
     display: flex;

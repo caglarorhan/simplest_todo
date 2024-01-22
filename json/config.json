@@ -30,6 +30,6 @@
 
   "toDoBoxInListStyleClass": "toDoBoxInList",
 
-  "filterContainerId":"filterContainer",
-  "filterContainerStyleClass": "filterContainer"
+  "toDoFilterContainerId":"toDoFilterContainer",
+  "toDoFilterContainerStyleClass": "toDoFilterContainer"
 }

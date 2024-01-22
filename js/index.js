@@ -82,6 +82,10 @@ let simToDo = {
         toDoInputContainer.id = conf.toDoInputContainerId;
         toDoInputContainer.classList.add(conf.todoInputContainerStyleClass);
 
+        let toDoFilterContainer = this.createFilterOptionsContainer();
+        toDoFilterContainer.id= conf.toDoFilterContainerId;
+        toDoFilterContainer.classList.add(conf.toDoFilterContainerStyleClass)
+
         let toDoListContainer = this.createElm('div');
         toDoListContainer.id = conf.toDoListContainerId;
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
@@ -94,6 +98,7 @@ let simToDo = {
         //
 
         this.targetContainer.appendChild(toDoInputContainer);
+        this.targetContainer.appendChild(toDoFilterContainer);
         this.targetContainer.appendChild(toDoListContainer);
 
         saveToDoButton.textContent = conf.textLabels[conf.defaultLang].saveButton;
@@ -135,19 +140,25 @@ let simToDo = {
         document.getElementById(conf.toDoInputTextareaId).value = '';
     },
     drawFilters() {
-        let filterOptionsContainer = this.createFilterOptionsContainer(conf.filterContainerId);
 
+        //document.body.appendChild(filterOptionsContainer);
     },
-    drawToDos(pageNo = 1) {
+    drawToDos(pageNo = 1, filterParams = {done:true}) {
         let toDoListContainer = document.getElementById(conf.toDoListContainerId);
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
         let firstItemIndex = (pageNo - 1) * this.activeState.itemPerPage;
         let lastItemIndex = (pageNo * this.activeState.itemPerPage) - 1;
-        lastItemIndex = (lastItemIndex < this.activeState.todos.length) ? lastItemIndex : this.activeState.todos.length - 1;
+        let toDos= this.activeState.todos;
 
-        let sortedToDoList = this.activeState.todos.sort((a, b) => b.created - a.created);
-        //let filteredToDoList = sortedToDoList.filter(item=>{});
-        // TODO: burada  listeyi lastList seklinde asagidaki fonksiyonlara sunmaliyiz, ister sorted olsun ister filtered.
+        let sortedToDoList = toDos.sort((a, b) => b.created - a.created);
+
+        if(Object.keys(filterParams).length){
+            console.log('Parametre geldi');
+            // TODO gelen parametre saklanmali
+            sortedToDoList = sortedToDoList.filter(item=>(item.done === true));
+        }
+
+        lastItemIndex = (lastItemIndex < sortedToDoList.length) ? lastItemIndex : sortedToDoList.length - 1;
         let printToDo = (indexNo) => {
             let theToDo = sortedToDoList[indexNo];
             let todoBox = this.createElm('div');

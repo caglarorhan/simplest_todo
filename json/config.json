@@ -1,10 +1,9 @@
 {
   "defaultLang": "en",
-  "defaultStyleFile": "simToDo_default.css",
+  "defaultStyleFile": "./css/index.css",
   "alternateStyleFile": "simToDo_alternate.css",
-  "todoInputContainerID": "simToDo-input-container",
-  "todoListContainer": "simToDo-list-container",
-  "todoFilterContainerID": "simToDo-filter-container",
+  "autoSaveTime": 10,
+  "minInputLength": 3,
   "itemPerPage": "item-per-page",
   "maxPagingButton": "max-paging-button",
   "textLabels":{
@@ -16,5 +15,15 @@
       "saveButton": "Save TODO",
       "headerText":"Simplest TODO Application"
     }
-  }
+  },
+  "mainContainerId":"mainToDoContainer",
+  "mainContainerStyleClass": "",
+  "toDoInputContainerId":"todoInputContainer",
+  "todoInputContainerStyleClass": "",
+  "toDoInputId":"todoInput",
+  "todoInputStyleClass": "",
+  "toDoContainerId":"todoListContainer",
+  "todoListContainerStyleClass": "",
+  "filterContainerId":"filterContainer",
+  "": ""
 }

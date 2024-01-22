@@ -2,7 +2,9 @@ body{
     font-family: Arial, serif;
 }
 
-.simToDo-toDoInput{
+
+
+#todoInput{
     width: 400px;
     height: 400px;
 }
@@ -36,6 +38,5 @@ input[type="range"] {
     -webkit-appearance: none;
     border: 1px solid blue;
     border-radius: 8px;
-    margin-bottom: 0;
     cursor: pointer;
 }

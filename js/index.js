@@ -112,11 +112,12 @@ let simToDo = {
     prepareNewToDoObject() {
         let toDoInputTextarea = document.getElementById(conf.toDoInputTextareaId);
         console.log(toDoInputTextarea);
-        if (!toDoInputTextarea.value) {
+        if (!toDoInputTextarea.value || toDoInputTextarea.value.length<this.minInputLength) {
             this.giveMessage({
                 type: 'error',
                 message: `ToDo input must be at least ${this.minInputLength} characters long!`
             })
+            return false;
         }
         let newToDoObject = {
             uuid: this.createUID(),

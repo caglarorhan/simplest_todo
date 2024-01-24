@@ -147,6 +147,7 @@ let simToDo = {
         this.drawToDos(1, this.filterParameters);
     },
     drawToDos(pageNo = 1, filterParams = {}) {
+        console.log(filterParams);
         let toDoListContainer = document.getElementById(conf.toDoListContainerId);
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
         let firstItemIndex = (pageNo - 1) * this.activeState.itemPerPage;
@@ -159,7 +160,7 @@ let simToDo = {
             sortedToDoList = sortedToDoList.filter(item => {
                 let result = true;
                 Object.keys(filterParams).forEach(paramKey => {
-                    if (item[paramKey] !== filterParams[paramKey]) {
+                    if ((item[paramKey] !== filterParams[paramKey]) && filterParams[paramKey]!==null) {
                         result = false;
                     }
                 })

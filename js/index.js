@@ -1,6 +1,7 @@
 //SimplestToDo //simToDo
 // TODO: Paging for saved todos // DONE
 // TODO: config.json file applying // DONE
+// TODO: save filter parameters
 // TODO: Search from saved todos
 // TODO: To set dependency relations (prerequest-postrequest)
 // TODO: Login to firebase
@@ -25,13 +26,13 @@ let simToDo = {
         error: `error`,
         success: `success`
     },
+    filterParameters: {},
     init() {
         this.storageToState();
         this.autoSave();
         this.createAndLoadCSSFiles();
         this.createUISkeleton();
         this.createToDoElements();
-        this.drawFilters();
         this.drawToDos();
 
     },
@@ -83,7 +84,7 @@ let simToDo = {
         toDoInputContainer.classList.add(conf.todoInputContainerStyleClass);
 
         let toDoFilterContainer = this.createFilterOptionsContainer();
-        toDoFilterContainer.id= conf.toDoFilterContainerId;
+        toDoFilterContainer.id = conf.toDoFilterContainerId;
         toDoFilterContainer.classList.add(conf.toDoFilterContainerStyleClass)
 
         let toDoListContainer = this.createElm('div');
@@ -139,26 +140,35 @@ let simToDo = {
         console.log(conf.toDoInputTextareaId)
         document.getElementById(conf.toDoInputTextareaId).value = '';
     },
-    drawFilters() {
-
-        //document.body.appendChild(filterOptionsContainer);
+    updateFilters(filterUpdateObj = {}) {
+        Object.keys(filterUpdateObj).forEach(key => {
+            this.filterParameters[key] = filterUpdateObj[key];
+        })
+        this.drawToDos(1, this.filterParameters);
     },
-    drawToDos(pageNo = 1, filterParams = {done:true}) {
+    drawToDos(pageNo = 1, filterParams = {}) {
         let toDoListContainer = document.getElementById(conf.toDoListContainerId);
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
         let firstItemIndex = (pageNo - 1) * this.activeState.itemPerPage;
         let lastItemIndex = (pageNo * this.activeState.itemPerPage) - 1;
-        let toDos= this.activeState.todos;
+        let toDos = this.activeState.todos;
 
         let sortedToDoList = toDos.sort((a, b) => b.created - a.created);
 
-        if(Object.keys(filterParams).length){
-            console.log('Parametre geldi');
-            // TODO gelen parametre saklanmali
-            sortedToDoList = sortedToDoList.filter(item=>(item.done === true));
-        }
+        if (Object.keys(filterParams).length) {
+            sortedToDoList = sortedToDoList.filter(item => {
+                let result = true;
+                Object.keys(filterParams).forEach(paramKey => {
+                    if (item[paramKey] !== filterParams[paramKey]) {
+                        result = false;
+                    }
+                })
+                return result;
+            });
 
-        lastItemIndex = (lastItemIndex < sortedToDoList.length) ? lastItemIndex : sortedToDoList.length - 1;
+        }
+        let sortedToDoListLength = sortedToDoList.length;
+        lastItemIndex = (lastItemIndex < sortedToDoListLength) ? lastItemIndex : sortedToDoListLength - 1;
         let printToDo = (indexNo) => {
             let theToDo = sortedToDoList[indexNo];
             let todoBox = this.createElm('div');
@@ -180,12 +190,12 @@ let simToDo = {
             toDoListContainer.appendChild(todoBox);
         }
         toDoListContainer.innerHTML = '';
-        toDoListContainer.innerHTML += `<span style="font-weight: bold">TOTAL ENTRIES: ${this.activeState.todos.length.toString()}</span>`;
+        toDoListContainer.innerHTML += `<span style="font-weight: bold">TOTAL ENTRIES: ${sortedToDoListLength.toString()}</span>`;
 
         for (let j = firstItemIndex; j <= lastItemIndex; j++) {
             printToDo(j);
         }
-        let pagingButtonElements = this.createPagination({currentPageNo: pageNo})
+        let pagingButtonElements = this.createPagination({currentPageNo: pageNo, toDoCount: sortedToDoListLength})
         toDoListContainer.insertAdjacentElement('afterbegin', pagingButtonElements);
     },
     updateToDo(command = {uuid: '', job: 'show', data: {}}) {
@@ -236,9 +246,22 @@ let simToDo = {
         typeRangeInput.max = Object.keys(filterData).length - 1;
         typeRangeInput.step = 1;
         typeRangeInput.setAttribute('list', 'filterValues');
-        typeRangeInput.value = Object.keys(filterData)[0];
+        typeRangeInput.value = 0;
         typeRangeInput.addEventListener('change', () => {
             document.querySelector('#filterTypeTitle').textContent = Object.values(filterData)[typeRangeInput.value];
+            let filterSelection = Object.keys(filterData)[typeRangeInput.value];
+            let filterUpdateObj = {};
+            switch (filterSelection) {
+                case "done":
+                    filterUpdateObj.done = true;
+                    break;
+                case "notYet":
+                    filterUpdateObj.done = false;
+                    break;
+                default:
+                    filterUpdateObj.done = null;
+            }
+            this.updateFilters(filterUpdateObj);
         });
 
 
@@ -248,21 +271,21 @@ let simToDo = {
 
         return filterOptionsContainer;
     },
-    createPagination(conf = {currentPageNo: 1}) {
+    createPagination(pagingParamObj = {currentPageNo: 1, toDoCount: this.activeState.todos.length}) {
         let paginationContainer = this.createElm('div');
         let firstPageNo = 1;
-        if (conf.currentPageNo > Math.floor(this.activeState.maxPagingButton / 2)) {
-            firstPageNo = conf.currentPageNo - Math.floor(this.activeState.maxPagingButton / 2);
+        if (pagingParamObj.currentPageNo > Math.floor(this.activeState.maxPagingButton / 2)) {
+            firstPageNo = pagingParamObj.currentPageNo - Math.floor(this.activeState.maxPagingButton / 2);
         }
         let lastPageNo = firstPageNo + this.activeState.maxPagingButton - 1;
-        if (lastPageNo > Math.ceil(this.activeState.todos.length / this.activeState.itemPerPage)) {
-            lastPageNo = Math.ceil(this.activeState.todos.length / this.activeState.itemPerPage);
+        if (lastPageNo > Math.ceil(pagingParamObj.toDoCount / this.activeState.itemPerPage)) {
+            lastPageNo = Math.ceil(pagingParamObj.toDoCount / this.activeState.itemPerPage);
         }
 
         for (let pageNo = firstPageNo; pageNo <= lastPageNo; pageNo++) {
             let newPageButton = this.createElm('button');
             newPageButton.addEventListener('click', () => {
-                this.drawToDos(pageNo)
+                this.drawToDos(pageNo, this.filterParameters)
             })
             newPageButton.textContent = pageNo;
             paginationContainer.appendChild(newPageButton);
@@ -298,8 +321,6 @@ let simToDo = {
                 break;
         }
     }
-
-
 };
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -22,7 +22,7 @@ body{
 
 .toDoInputTextarea{
     width: 400px;
-    height: 400px;
+    height: 200px;
 }
 
 .toDoBoxInList{
@@ -31,10 +31,19 @@ body{
     padding: 5px;
     border-radius: 5px;
 }
+.toDoBoxInList:hover{
+    background-color: black;
+    color: white;
+    cursor: pointer;
+}
 
 .toDoFilterContainer{
     border: 1px solid lightgray;
     height: 100px;
+}
+
+.toDoSearchContainer{
+
 }
 
 datalist {

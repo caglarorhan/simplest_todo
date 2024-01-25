@@ -87,6 +87,10 @@ let simToDo = {
         toDoFilterContainer.id = conf.toDoFilterContainerId;
         toDoFilterContainer.classList.add(conf.toDoFilterContainerStyleClass)
 
+        let toDoSearchContainer = this.createSearchContainer();
+        toDoSearchContainer.id = conf.toDoSearchContainerId;
+        toDoSearchContainer.classList.add(conf.toDoSearchContainerStyleClass);
+
         let toDoListContainer = this.createElm('div');
         toDoListContainer.id = conf.toDoListContainerId;
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
@@ -99,6 +103,7 @@ let simToDo = {
         //
 
         this.targetContainer.appendChild(toDoInputContainer);
+        this.targetContainer.appendChild(toDoSearchContainer);
         this.targetContainer.appendChild(toDoFilterContainer);
         this.targetContainer.appendChild(toDoListContainer);
 
@@ -161,8 +166,10 @@ let simToDo = {
             sortedToDoList = sortedToDoList.filter(item => {
                 let result = true;
                 Object.keys(filterParams).forEach(paramKey => {
-                    if ((item[paramKey] !== filterParams[paramKey]) && filterParams[paramKey]!==null) {
-                        result = false;
+                    if(filterParams[paramKey]!==null){
+                        if (!(item[paramKey].toString().includes(filterParams[paramKey].toString()))) {
+                            result = false;
+                        }
                     }
                 })
                 return result;
@@ -242,7 +249,6 @@ let simToDo = {
             typeList.appendChild(newOption);
         })
         typeRangeInput.type = 'range';
-
         typeRangeInput.id = 'typeRangeInput';
         typeRangeInput.min = 0;
         typeRangeInput.max = Object.keys(filterData).length - 1;
@@ -272,6 +278,23 @@ let simToDo = {
 
 
         return filterOptionsContainer;
+    },
+    createSearchContainer(){
+        let searchContainer = this.createElm('div');
+        let title = this.createElm('span');
+        title.textContent = conf.textLabels[conf.defaultLang].searchTitle;
+
+        let searchInput = this.createElm('input');
+        searchInput.setAttribute('type', 'search');
+        searchInput.addEventListener('input',()=>{
+            console.log(searchInput.value);
+            let filterUpdateObj = {body: searchInput.value};
+            this.updateFilters(filterUpdateObj);
+        })
+
+        searchContainer.appendChild(title);
+        searchContainer.appendChild(searchInput);
+        return searchContainer;
     },
     createPagination(pagingParamObj = {currentPageNo: 1, toDoCount: this.activeState.todos.length}) {
         let paginationContainer = this.createElm('div');

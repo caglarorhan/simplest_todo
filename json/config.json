@@ -9,11 +9,15 @@
   "textLabels":{
     "tr":{
       "saveButton":"TODO kaydet",
-      "headerText":"Simplest TODO Uygulamasi"
+      "headerText":"Simplest TODO Uygulamasi",
+      "searchTitle": "TODO Ara: ",
+      "searchPlaceHolder": "Anahtar kelime girin"
     },
     "en":{
       "saveButton": "Save TODO",
-      "headerText":"Simplest TODO Application"
+      "headerText":"Simplest TODO Application",
+      "searchTitle": "Search ToDo: ",
+      "searchPlaceHolder": "Search for a keyword"
     }
   },
   "mainContainerId":"mainToDoContainer",
@@ -31,5 +35,8 @@
   "toDoBoxInListStyleClass": "toDoBoxInList",
 
   "toDoFilterContainerId":"toDoFilterContainer",
-  "toDoFilterContainerStyleClass": "toDoFilterContainer"
+  "toDoFilterContainerStyleClass": "toDoFilterContainer",
+
+  "toDoSearchContainerId":"toDoSearchContainer",
+  "toDoSearchContainerStyleClass": "toDoSearchContainer"
 }

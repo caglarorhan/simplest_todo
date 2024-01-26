@@ -38,5 +38,8 @@
   "toDoFilterContainerStyleClass": "toDoFilterContainer",
 
   "toDoSearchContainerId":"toDoSearchContainer",
-  "toDoSearchContainerStyleClass": "toDoSearchContainer"
+  "toDoSearchContainerStyleClass": "toDoSearchContainer",
+
+  "toDoDependencyTreeId": "toDoDependencyTree",
+  "toDoDependencyTreeStyleClass": "toDoDependencyTree"
 }

@@ -46,6 +46,10 @@ body{
 
 }
 
+.toDoDependencyTree{
+    background-color: lightgray;
+}
+
 datalist {
     display: flex;
     flex-direction: column;

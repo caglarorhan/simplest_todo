@@ -101,16 +101,23 @@ let simToDo = {
         toDoInputTextarea.classList.add(conf.todoInputTextareaStyleClass);
         let saveToDoButton = this.createElm('button');
         //
+        let toDoDependencyTree = this.createElm('div');
+        toDoDependencyTree.id = conf.toDoDependencyTreeId;
+        toDoDependencyTree.classList.add(conf.toDoDependencyTreeStyleClass);
+        toDoDependencyTree.innerHTML='The DependencyTree';
+
 
         this.targetContainer.appendChild(toDoInputContainer);
-        this.targetContainer.appendChild(toDoSearchContainer);
         this.targetContainer.appendChild(toDoFilterContainer);
+        this.targetContainer.appendChild(toDoSearchContainer);
+        this.targetContainer.appendChild(toDoDependencyTree);
         this.targetContainer.appendChild(toDoListContainer);
 
         saveToDoButton.textContent = conf.textLabels[conf.defaultLang].saveButton;
         headerText.textContent = conf.textLabels[conf.defaultLang].headerText;
         toDoInputContainer.appendChild(headerText);
         toDoInputContainer.appendChild(toDoInputTextarea);
+        toDoInputContainer.appendChild(this.createElm('br'));
         toDoInputContainer.appendChild(saveToDoButton);
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
     },
@@ -122,6 +129,7 @@ let simToDo = {
                 type: 'error',
                 message: `ToDo input must be at least ${this.minInputLength} characters long!`
             })
+            toDoInputTextarea.focus();
             return false;
         }
         let newToDoObject = {
@@ -178,10 +186,36 @@ let simToDo = {
         }
         let sortedToDoListLength = sortedToDoList.length;
         lastItemIndex = (lastItemIndex < sortedToDoListLength) ? lastItemIndex : sortedToDoListLength - 1;
-        let printToDo = (indexNo) => {
-            let theToDo = sortedToDoList[indexNo];
-            let todoBox = this.createElm('div');
-            let readableDateData = this.createReadableDate(theToDo.created);
+
+        toDoListContainer.innerHTML = '';
+        toDoListContainer.innerHTML += `<span style="font-weight: bold">TOTAL ENTRIES: ${sortedToDoListLength.toString()}</span>`;
+
+        for (let j = firstItemIndex; j <= lastItemIndex; j++) {
+            let newToDoBox = this.printToDo({theToDo:sortedToDoList[j], rules:{update:true, dependencyButton:true}});
+            toDoListContainer.appendChild(newToDoBox);
+        }
+        let pagingButtonElements = this.createPagination({currentPageNo: pageNo, toDoCount: sortedToDoListLength})
+        toDoListContainer.insertAdjacentElement('afterbegin', pagingButtonElements);
+    },
+    getDependencyTree(targetToDoObject){
+        let dependencyTree = document.getElementById(conf.toDoDependencyTreeId);
+        dependencyTree.innerHTML='';
+        dependencyTree.append(this.printToDo({theToDo:targetToDoObject, rules:{}}));
+    },
+    printToDo(toDoJob={}){
+        let theToDo = toDoJob.theToDo;
+        let toDoBox = this.createElm('div');
+        let readableDateData = this.createReadableDate(theToDo.created);
+
+        toDoBox.classList.add(conf.toDoBoxInListStyleClass);
+        toDoBox.innerHTML += theToDo.body;
+        toDoBox.innerHTML += '<br>UUID: ' + theToDo.uuid;
+        toDoBox.innerHTML += '<br>Dependencies: ' + theToDo.dependencies.toString();
+        toDoBox.innerHTML += '<br>Created: ' + readableDateData;
+        toDoBox.innerHTML += `<br>Is it done: ${theToDo.done.toString() === `true` ? " done" : "not yet"}`
+
+        if(toDoJob.rules.update){
+            toDoBox.innerHTML += '<br>Done:';
             let theCheckBox = this.createElm('input');
             theCheckBox.value = theToDo.uuid;
             theCheckBox.type = "checkbox";
@@ -189,23 +223,20 @@ let simToDo = {
             theCheckBox.addEventListener("click", () => {
                 this.updateToDo({uuid: theToDo.uuid, job: 'update', data: {done: theCheckBox.checked}})
             })
-            todoBox.classList.add(conf.toDoBoxInListStyleClass);
-            todoBox.innerHTML += theToDo.body;
-            todoBox.innerHTML += '<br>indexNO: ' + indexNo;
-            todoBox.innerHTML += '<br>UUID: ' + theToDo.uuid;
-            todoBox.innerHTML += '<br>Created: ' + readableDateData;
-            todoBox.innerHTML += '<br>Done:';
-            todoBox.appendChild(theCheckBox);
-            toDoListContainer.appendChild(todoBox);
+            toDoBox.appendChild(theCheckBox);
         }
-        toDoListContainer.innerHTML = '';
-        toDoListContainer.innerHTML += `<span style="font-weight: bold">TOTAL ENTRIES: ${sortedToDoListLength.toString()}</span>`;
 
-        for (let j = firstItemIndex; j <= lastItemIndex; j++) {
-            printToDo(j);
+        if(toDoJob.rules.dependencyButton){
+            let dependButton = this.createElm('button');
+            dependButton.textContent='Dependency';
+            dependButton.style.float='right';
+            dependButton.addEventListener("click", () => {
+                this.getDependencyTree(theToDo);
+            })
+            toDoBox.appendChild(dependButton);
         }
-        let pagingButtonElements = this.createPagination({currentPageNo: pageNo, toDoCount: sortedToDoListLength})
-        toDoListContainer.insertAdjacentElement('afterbegin', pagingButtonElements);
+
+        return toDoBox;
     },
     updateToDo(command = {uuid: '', job: 'show', data: {}}) {
         if (!command.uuid) {

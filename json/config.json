@@ -41,5 +41,16 @@
   "toDoSearchContainerStyleClass": "toDoSearchContainer",
 
   "toDoDependencyTreeId": "toDoDependencyTree",
-  "toDoDependencyTreeStyleClass": "toDoDependencyTree"
+  "toDoDependencyTreeStyleClass": "toDoDependencyTree",
+
+  "ui_container_structure": {
+    "isTargetIntegrated": false,
+    "ui_structure": {
+      "toDoInputContainer": "newToDoFromHere",
+      "toDoFilterContainer": "filtersHere",
+      "toDoSearchContainer": "searchHere",
+      "toDoDependencyTree": "seeDependenciesHere",
+      "toDoListContainer": "toDoListHere"
+    }
+  }
 }

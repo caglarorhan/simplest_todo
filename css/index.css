@@ -1,7 +1,11 @@
 body{
     font-family: Arial, serif;
 }
-
+h2{
+    margin:0;
+    font-size:18px;
+    color:blue;
+}
 .mainToDoContainer{
     display: flex;
     flex-direction: row;
@@ -16,13 +20,11 @@ body{
     display: flex;
     margin-left:auto;
     flex-direction: column;
-    width:40%;
-
 }
 
 .toDoInputTextarea{
     width: 400px;
-    height: 200px;
+    height: 60px;
 }
 
 .toDoBoxInList{
@@ -39,7 +41,7 @@ body{
 
 .toDoFilterContainer{
     border: 1px solid lightgray;
-    height: 100px;
+    height: 70px;
 }
 
 .toDoSearchContainer{
@@ -81,3 +83,32 @@ input[type="range"] {
     border-radius: 8px;
     cursor: pointer;
 }
+/*******************ALTERNATIF CSS ve UI STRUCTURE*****************************/
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    align-content: flex-start;
+}
+
+.flex-items:nth-child(1) {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+}
+
+.flex-items:nth-child(2) {
+    display: block;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+}
+

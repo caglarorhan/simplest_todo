@@ -75,24 +75,28 @@ let simToDo = {
         setInterval(this.saveTheState.bind(this), this.autoSaveTime * 1000);
     },
     createUISkeleton() {
-        this.targetContainer = document.querySelector(`#${conf.mainContainerId}`) ?? document.body;
-        this.targetContainer.classList.add(conf.mainContainerStyleClass);
+
     },
     createToDoElements() {
+        let containersObj = {};
         let toDoInputContainer = this.createElm('div');
         toDoInputContainer.id = conf.toDoInputContainerId;
+        containersObj["toDoInputContainer"]=toDoInputContainer;
         toDoInputContainer.classList.add(conf.todoInputContainerStyleClass);
 
         let toDoFilterContainer = this.createFilterOptionsContainer();
         toDoFilterContainer.id = conf.toDoFilterContainerId;
+        containersObj["toDoFilterContainer"]=toDoFilterContainer;
         toDoFilterContainer.classList.add(conf.toDoFilterContainerStyleClass)
 
         let toDoSearchContainer = this.createSearchContainer();
         toDoSearchContainer.id = conf.toDoSearchContainerId;
+        containersObj["toDoSearchContainer"]=toDoSearchContainer;
         toDoSearchContainer.classList.add(conf.toDoSearchContainerStyleClass);
 
         let toDoListContainer = this.createElm('div');
         toDoListContainer.id = conf.toDoListContainerId;
+        containersObj["toDoListContainer"]=toDoListContainer;
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
 
         let headerText = this.createElm('h2');
@@ -103,15 +107,32 @@ let simToDo = {
         //
         let toDoDependencyTree = this.createElm('div');
         toDoDependencyTree.id = conf.toDoDependencyTreeId;
+        containersObj["toDoDependencyTree"]=toDoDependencyTree;
         toDoDependencyTree.classList.add(conf.toDoDependencyTreeStyleClass);
         toDoDependencyTree.innerHTML='The DependencyTree';
 
+        if(conf.ui_container_structure.isTargetIntegrated.toString()==="true"){
+            this.targetContainer = document.querySelector(`#${conf.mainContainerId}`) ?? document.body;
+            this.targetContainer.classList.add(conf.mainContainerStyleClass);
+            Object.keys(containersObj).forEach(key=>{
+                this.targetContainer.appendChild(containersObj[key])
+            })
+        }else{
+            let uiStructure = conf.ui_container_structure.ui_structure;
+            console.log(uiStructure);
+            console.log(containersObj);
+            Object.keys(uiStructure).forEach(key=>{
+                if(!document.getElementById(uiStructure[key])){
+                    console.log(`The id of ${uiStructure[key]} couldn't found in the page`)
+                }else{
+                    console.log(containersObj[key]);
+                    document.getElementById(uiStructure[key]).appendChild(containersObj[key])
+                }
 
-        this.targetContainer.appendChild(toDoInputContainer);
-        this.targetContainer.appendChild(toDoFilterContainer);
-        this.targetContainer.appendChild(toDoSearchContainer);
-        this.targetContainer.appendChild(toDoDependencyTree);
-        this.targetContainer.appendChild(toDoListContainer);
+            })
+
+        }
+
 
         saveToDoButton.textContent = conf.textLabels[conf.defaultLang].saveButton;
         headerText.textContent = conf.textLabels[conf.defaultLang].headerText;

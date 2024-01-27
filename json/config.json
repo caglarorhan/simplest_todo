@@ -28,6 +28,8 @@
 
   "toDoInputTextareaId":"toDoInputTextarea",
   "todoInputTextareaStyleClass": "toDoInputTextarea",
+  "toDoDateTimeInputId":"toDoDateTimeInput",
+  "toDoDateTimeInputStyleClass": "toDoDateTimeInput",
 
   "toDoListContainerId":"toDoListContainer",
   "toDoListContainerStyleClass": "toDoListContainer",

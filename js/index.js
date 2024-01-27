@@ -1,12 +1,13 @@
 //SimplestToDo //simToDo
 // TODO: Paging for saved todos // DONE
 // TODO: config.json file applying // DONE
-// TODO: save filter parameters
-// TODO: Search from saved todos
+// TODO: save filter parameters // DONE
+// TODO: Search from saved todos // DONE
+// TODO: Add estimated completing date and time to TODOs
 // TODO: To set dependency relations (prerequest-postrequest)
-// TODO: Login to firebase
-// TODO: Share todos with connected friends
-// TODO: Styles out to css file
+// TODO: Login with & Save to firebase
+// TODO: Share todos with connected friends or assign todos to them
+// TODO: Styles out to css file // DONE
 
 import conf from '../json/config.json' assert {type: 'json'};
 
@@ -101,6 +102,9 @@ let simToDo = {
 
         let headerText = this.createElm('h2');
         let toDoInputTextarea = this.createElm('textarea');
+        let toDoDateTimeInput = this.createElm('input');
+        toDoDateTimeInput.id = conf.toDoDateTimeInputId;
+        toDoDateTimeInput.type = "datetime-local";
         toDoInputTextarea.id = conf.toDoInputTextareaId;
         toDoInputTextarea.classList.add(conf.todoInputTextareaStyleClass);
         let saveToDoButton = this.createElm('button');
@@ -139,6 +143,7 @@ let simToDo = {
         toDoInputContainer.appendChild(headerText);
         toDoInputContainer.appendChild(toDoInputTextarea);
         toDoInputContainer.appendChild(this.createElm('br'));
+        toDoInputContainer.appendChild(toDoDateTimeInput);
         toDoInputContainer.appendChild(saveToDoButton);
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
     },

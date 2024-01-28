@@ -1,3 +1,7 @@
+:root {
+    --leftContainerWidth: 30%;
+    --rightContainerWidth: 70%;
+}
 body{
     font-family: Arial, serif;
 }
@@ -47,9 +51,15 @@ h2{
 .toDoSearchContainer{
 
 }
-
+#seeDependenciesHere{
+    display:flex;
+    height:90%;
+    flex-direction: column;
+}
 .toDoDependencyTree{
     background-color: lightgray;
+    flex-grow: 1;
+    flex: auto;
 }
 
 datalist {
@@ -84,31 +94,70 @@ input[type="range"] {
     cursor: pointer;
 }
 /*******************ALTERNATIF CSS ve UI STRUCTURE*****************************/
+
 .flex-container {
+    width: 100%;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: flex-start;
+    justify-content: flex-start;
+    align-items: stretch;
     align-content: flex-start;
 }
 
-.flex-items:nth-child(1) {
+.flex-container .leftContainer {
+    width:30%;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    flex-grow: 0;
     flex-shrink: 1;
     flex-basis: auto;
     align-self: auto;
     order: 0;
 }
 
-.flex-items:nth-child(2) {
-    display: block;
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
+.flex-container .rightContainer {
+    max-width: 75%;
+    display: flex;
+    flex-direction: column;
+    flex:1;
     align-self: auto;
     order: 0;
 }
 
+.toDoTimeLineContainer {
+    margin-top:0;
+    background-color: lightyellow;
+    border: 1px solid lightgray;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200px; /* Adjust height as needed */
+    min-height: 200px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scroll-behavior: smooth;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Edge and IE */
+    scroll-snap-type: x mandatory;
+}
+
+.toDoTimeLineContainer::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.toDoTimeLineContainer .day{
+    text-align: center;
+    scroll-snap-align: start;
+    padding-top:15px;
+    margin-left: 10px;
+    margin-right:10px;
+    border:1px solid red;
+    min-width: 200px;
+    min-height: 30px;
+    max-height: 40px;
+}

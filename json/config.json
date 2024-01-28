@@ -11,13 +11,17 @@
       "saveButton":"TODO kaydet",
       "headerText":"Simplest TODO Uygulamasi",
       "searchTitle": "TODO Ara: ",
-      "searchPlaceHolder": "Anahtar kelime girin"
+      "searchPlaceHolder": "Anahtar kelime girin",
+      "totalEntriesTitle" : "TOPLAM TODO SAYISI:",
+      "intendedDateTitle": "Hedef Tarih"
     },
     "en":{
       "saveButton": "Save TODO",
       "headerText":"Simplest TODO Application",
       "searchTitle": "Search ToDo: ",
-      "searchPlaceHolder": "Search for a keyword"
+      "searchPlaceHolder": "Search for a keyword",
+      "totalEntriesTitle" : "TOTAL ENTRIES:",
+      "intendedDateTitle": "Intended Date"
     }
   },
   "mainContainerId":"mainToDoContainer",
@@ -45,6 +49,9 @@
   "toDoDependencyTreeId": "toDoDependencyTree",
   "toDoDependencyTreeStyleClass": "toDoDependencyTree",
 
+  "toDoTimeLineContainerId": "toDoTimeLineContainer",
+  "toDoTimeLineContainerStyleClass": "toDoTimeLineContainer",
+
   "ui_container_structure": {
     "isTargetIntegrated": false,
     "ui_structure": {
@@ -52,7 +59,8 @@
       "toDoFilterContainer": "filtersHere",
       "toDoSearchContainer": "searchHere",
       "toDoDependencyTree": "seeDependenciesHere",
-      "toDoListContainer": "toDoListHere"
+      "toDoListContainer": "toDoListHere",
+      "toDoTimeLineContainer": "toDoTimeLineHere"
     }
   }
 }

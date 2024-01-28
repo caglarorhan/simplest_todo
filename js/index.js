@@ -32,8 +32,8 @@ let simToDo = {
         this.storageToState();
         this.autoSave();
         this.createAndLoadCSSFiles();
-        this.createUISkeleton();
         this.createToDoElements();
+        this.createTimeLine();
         this.drawToDos();
 
     },
@@ -75,9 +75,6 @@ let simToDo = {
     autoSave() {
         setInterval(this.saveTheState.bind(this), this.autoSaveTime * 1000);
     },
-    createUISkeleton() {
-
-    },
     createToDoElements() {
         let containersObj = {};
         let toDoInputContainer = this.createElm('div');
@@ -100,11 +97,21 @@ let simToDo = {
         containersObj["toDoListContainer"]=toDoListContainer;
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
 
+        let toDoTimeLineContainer = this.createElm('div');
+        toDoTimeLineContainer.id = conf.toDoTimeLineContainerId;
+        containersObj["toDoTimeLineContainer"]=toDoTimeLineContainer;
+        toDoTimeLineContainer.classList.add(conf.toDoTimeLineContainerStyleClass);
+
+
         let headerText = this.createElm('h2');
         let toDoInputTextarea = this.createElm('textarea');
+        let toDoDateTimeInputTitle = this.createElm('span');
+        toDoDateTimeInputTitle.textContent = conf.textLabels[conf.defaultLang].intendedDateTitle
         let toDoDateTimeInput = this.createElm('input');
         toDoDateTimeInput.id = conf.toDoDateTimeInputId;
         toDoDateTimeInput.type = "datetime-local";
+
+
         toDoInputTextarea.id = conf.toDoInputTextareaId;
         toDoInputTextarea.classList.add(conf.todoInputTextareaStyleClass);
         let saveToDoButton = this.createElm('button');
@@ -123,13 +130,13 @@ let simToDo = {
             })
         }else{
             let uiStructure = conf.ui_container_structure.ui_structure;
-            console.log(uiStructure);
-            console.log(containersObj);
+            //console.log(uiStructure);
+            //console.log(containersObj);
             Object.keys(uiStructure).forEach(key=>{
                 if(!document.getElementById(uiStructure[key])){
                     console.log(`The id of ${uiStructure[key]} couldn't found in the page`)
                 }else{
-                    console.log(containersObj[key]);
+                   // console.log(containersObj[key]);
                     document.getElementById(uiStructure[key]).appendChild(containersObj[key])
                 }
 
@@ -137,19 +144,20 @@ let simToDo = {
 
         }
 
-
         saveToDoButton.textContent = conf.textLabels[conf.defaultLang].saveButton;
         headerText.textContent = conf.textLabels[conf.defaultLang].headerText;
         toDoInputContainer.appendChild(headerText);
         toDoInputContainer.appendChild(toDoInputTextarea);
         toDoInputContainer.appendChild(this.createElm('br'));
+        toDoInputContainer.appendChild(toDoDateTimeInputTitle);
         toDoInputContainer.appendChild(toDoDateTimeInput);
         toDoInputContainer.appendChild(saveToDoButton);
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
     },
     prepareNewToDoObject() {
         let toDoInputTextarea = document.getElementById(conf.toDoInputTextareaId);
-        console.log(toDoInputTextarea);
+        //console.log(toDoInputTextarea);
+        let toDoDateTimeInput = document.getElementById(conf.toDoDateTimeInputId);
         if (!toDoInputTextarea.value || toDoInputTextarea.value.length<this.minInputLength) {
             this.giveMessage({
                 type: 'error',
@@ -161,23 +169,24 @@ let simToDo = {
         let newToDoObject = {
             uuid: this.createUID(),
             body: toDoInputTextarea.value,
+            intended: toDoDateTimeInput.value,
             created: Date.now(),
             updated: Date.now(),
             dependencies: [],
             done: false
         }
-        console.log(newToDoObject);
+        //console.log(newToDoObject);
         this.saveNewToDo(newToDoObject);
     },
     saveNewToDo(newToDo) {
-        console.log(newToDo);
+        //console.log(newToDo);
         this.activeState.todos.push(newToDo);
         this.clearToDoInput();
         this.drawToDos();
         this.stateToStorage();
     },
     clearToDoInput() {
-        console.log(conf.toDoInputTextareaId)
+        //console.log(conf.toDoInputTextareaId)
         document.getElementById(conf.toDoInputTextareaId).value = '';
     },
     updateFilters(filterUpdateObj = {}) {
@@ -187,7 +196,7 @@ let simToDo = {
         this.drawToDos(1, this.filterParameters);
     },
     drawToDos(pageNo = 1, filterParams = {}) {
-        console.log(filterParams);
+        //console.log(filterParams);
         let toDoListContainer = document.getElementById(conf.toDoListContainerId);
         toDoListContainer.classList.add(conf.toDoListContainerStyleClass);
         let firstItemIndex = (pageNo - 1) * this.activeState.itemPerPage;
@@ -214,7 +223,7 @@ let simToDo = {
         lastItemIndex = (lastItemIndex < sortedToDoListLength) ? lastItemIndex : sortedToDoListLength - 1;
 
         toDoListContainer.innerHTML = '';
-        toDoListContainer.innerHTML += `<span style="font-weight: bold">TOTAL ENTRIES: ${sortedToDoListLength.toString()}</span>`;
+        toDoListContainer.innerHTML += `<span style="font-weight: bold">${conf.textLabels[conf.defaultLang].totalEntriesTitle} ${sortedToDoListLength.toString()}</span>`;
 
         for (let j = firstItemIndex; j <= lastItemIndex; j++) {
             let newToDoBox = this.printToDo({theToDo:sortedToDoList[j], rules:{update:true, dependencyButton:true}});
@@ -232,13 +241,17 @@ let simToDo = {
         let theToDo = toDoJob.theToDo;
         let toDoBox = this.createElm('div');
         let readableDateData = this.createReadableDate(theToDo.created);
+        let dependencies = theToDo.dependencies.length?theToDo.dependencies.toString():'No dependency';
+        let intendedDate = theToDo.intended ?? "Any time from now" ;
+        let doneStatus = `${theToDo.done.toString() === `true` ? " done" : "not yet"}`
 
         toDoBox.classList.add(conf.toDoBoxInListStyleClass);
         toDoBox.innerHTML += theToDo.body;
         toDoBox.innerHTML += '<br>UUID: ' + theToDo.uuid;
-        toDoBox.innerHTML += '<br>Dependencies: ' + theToDo.dependencies.toString();
+        toDoBox.innerHTML += '<br>Intended: ' + intendedDate;
+        toDoBox.innerHTML += '<br>Dependencies: ' + dependencies;
         toDoBox.innerHTML += '<br>Created: ' + readableDateData;
-        toDoBox.innerHTML += `<br>Is it done: ${theToDo.done.toString() === `true` ? " done" : "not yet"}`
+        toDoBox.innerHTML += `<br>Is it done: ${doneStatus}`
 
         if(toDoJob.rules.update){
             toDoBox.innerHTML += '<br>Done:';
@@ -286,6 +299,40 @@ let simToDo = {
                 break;
 
         }
+    },
+    createTimeLine(){
+        let dayCount = 15;
+        let timeLine = document.getElementById(conf.toDoTimeLineContainerId);
+        //console.log(timeLine)
+        for(let x=-15; x<dayCount; x++){
+            let newDay = this.createElm('div');
+            newDay.classList.add('day');
+            let toDay = new Date();
+            let movementObj = {beginningDate: toDay, by:"day", amount:x}
+            newDay.id = `day-`
+            newDay.innerHTML = this.createReadableDate(this.moveDateBy(movementObj));
+            timeLine.appendChild(newDay);
+        }
+
+setTimeout(()=>{
+    document.querySelector('.toDoTimeLineContainer .day:nth-of-type(18)').scrollIntoView({
+        behavior: "smooth", // Optional: for smooth scrolling animation
+        block: "center",    // Scroll to center horizontally
+    });
+},500)
+
+
+        timeLine.addEventListener("wheel",(event)=>{
+            event.preventDefault();
+            timeLine.scrollLeft += 4*event.deltaY;
+            if(event.deltaY>0){
+                //console.log('saga donduruldu');
+            }else if(event.deltaY<0){
+                //console.log('sola donduruldu');
+            }
+        },{passive:false})
+
+
     },
     createFilterOptionsContainer() {
         let filterOptionsContainer = this.createElm('div');
@@ -344,7 +391,7 @@ let simToDo = {
         let searchInput = this.createElm('input');
         searchInput.setAttribute('type', 'search');
         searchInput.addEventListener('input',()=>{
-            console.log(searchInput.value);
+           // console.log(searchInput.value);
             let filterUpdateObj = {body: searchInput.value};
             this.updateFilters(filterUpdateObj);
         })
@@ -377,10 +424,7 @@ let simToDo = {
     },
     createReadableDate(mSeconds) {
         let theDate = new Date(mSeconds);
-        return this.addTo2Digit(theDate.getUTCMonth() + 1) + '.' + this.addTo2Digit(theDate.getUTCDay()) + '.' + theDate.getUTCFullYear();
-    },
-    addTo2Digit(input) {
-        return (input < 10) ? `0${input.toString()}` : input.toString();
+        return ((theDate.getMonth() + 1)%12).toString().padStart(2,"0") + '.' + (theDate.getDate()).toString().padStart(2,"0") + '.' + theDate.getUTCFullYear();
     },
     createUID() {
         let uuid = self.crypto.randomUUID();
@@ -388,6 +432,30 @@ let simToDo = {
             uuid = self.crypto.randomUUID();
         }
         return uuid;
+    },
+    convertToDateTimeLocalString(date){
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const day = date.getDate().toString().padStart(2, "0");
+        const hours = date.getHours().toString().padStart(2, "0");
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    },
+    moveDateBy(movement={beginningDate: new Date(), by:"day", amount:1}){
+        //console.log(movement)
+        let dayAmount = "day";
+        switch (movement.by){
+            case "day":
+                dayAmount = movement.amount;
+            break;
+            case "month":
+                dayAmount = movement.amount*30; // buggy !!!
+            break;
+            default:
+                dayAmount = movement.amount;
+        }
+        let currentTime = movement.beginningDate.getTime();
+        return currentTime + (24*60*60*1000*dayAmount);
     },
     giveMessage(messageObject = {type: 'message', message: 'Alright!'}) {
         switch (messageObject.type) {

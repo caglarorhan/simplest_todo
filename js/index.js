@@ -12,7 +12,8 @@
 import conf from '../json/config.json' assert {type: 'json'};
 
 let simToDo = {
-    version: "2024.0.1",
+    name: 'SimplestToDo',
+    version: "2024.0.2",
     autoSaveTime: conf.autoSaveTime,
     minInputLength: conf.minInputLength,
     activeState: {
@@ -29,6 +30,7 @@ let simToDo = {
     },
     filterParameters: {},
     init() {
+        document.title=`${this.name} : ${this.version}`
         this.storageToState();
         this.autoSave();
         this.createAndLoadCSSFiles();

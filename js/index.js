@@ -239,6 +239,7 @@ let simToDo = {
     },
     printToDo(toDoJob={}){
         let theToDo = toDoJob.theToDo;
+        console.log(toDoJob);
         let toDoBox = this.createElm('div');
         let readableDateData = this.createReadableDate(theToDo.created);
         let dependencies = theToDo.dependencies.length?theToDo.dependencies.toString():'No dependency';
@@ -248,7 +249,7 @@ let simToDo = {
         toDoBox.classList.add(conf.toDoBoxInListStyleClass);
         toDoBox.innerHTML += theToDo.body;
         toDoBox.innerHTML += '<br>UUID: ' + theToDo.uuid;
-        toDoBox.innerHTML += '<br>Intended: ' + intendedDate;
+        toDoBox.innerHTML += '<br>Intended: ' + intendedDate; //Date.parse()
         toDoBox.innerHTML += '<br>Dependencies: ' + dependencies;
         toDoBox.innerHTML += '<br>Created: ' + readableDateData;
         toDoBox.innerHTML += `<br>Is it done: ${doneStatus}`
@@ -308,10 +309,12 @@ let simToDo = {
             let newDay = this.createElm('div');
             newDay.classList.add('day');
             let toDay = new Date();
-            let movementObj = {beginningDate: toDay, by:"day", amount:x}
-            newDay.id = `day-`;
-            
-            newDay.innerHTML = this.createReadableDate(this.moveDateBy(movementObj));
+            let movementObj = {beginningDate: toDay, by:"day", amount:x};
+            let movedDate = this.moveDateBy(movementObj);
+            let readableDateOfThatDay = this.createReadableDate(movedDate);
+            newDay.innerHTML = readableDateOfThatDay;
+            //console.log((new Date(`${movedDate}`)).toIsoString());
+            newDay.id = `day-${readableDateOfThatDay.toString().replaceAll('.','')}`;
             timeLine.appendChild(newDay);
         }
 
@@ -332,7 +335,27 @@ setTimeout(()=>{
                 //console.log('sola donduruldu');
             }
         },{passive:false})
+// TODO:  attach the todos to days
+        this.activeState.todos.forEach(todo=>{
+            if(todo.intended){
+                let intendedMiliseconds = Date.parse(todo.intended);
+                let slicedDate = new Date(intendedMiliseconds).toISOString().split('T')[0].split('-');
 
+                let targetDayDivId = `day-${slicedDate[1].toString()}${slicedDate[2].toString()}${slicedDate[0].toString()}`;
+                console.log(targetDayDivId);
+                if(document.querySelector(`#${targetDayDivId}`)){
+                    let toDoReCallButton = this.createElm('button');
+                    toDoReCallButton.textContent='ReCall';
+
+                    toDoReCallButton.addEventListener('click',()=>{
+                        this.getDependencyTree(todo);
+                    })
+                    document.querySelector(`#${targetDayDivId}`).appendChild(toDoReCallButton);
+                    // this.getDependencyTree(theToDo);
+                }
+            }
+
+        })
 
     },
     createFilterOptionsContainer() {

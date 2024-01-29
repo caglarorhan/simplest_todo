@@ -309,7 +309,8 @@ let simToDo = {
             newDay.classList.add('day');
             let toDay = new Date();
             let movementObj = {beginningDate: toDay, by:"day", amount:x}
-            newDay.id = `day-`
+            newDay.id = `day-`;
+            
             newDay.innerHTML = this.createReadableDate(this.moveDateBy(movementObj));
             timeLine.appendChild(newDay);
         }
@@ -324,7 +325,7 @@ setTimeout(()=>{
 
         timeLine.addEventListener("wheel",(event)=>{
             event.preventDefault();
-            timeLine.scrollLeft += 4*event.deltaY;
+            timeLine.scrollLeft += 3*event.deltaY;
             if(event.deltaY>0){
                 //console.log('saga donduruldu');
             }else if(event.deltaY<0){

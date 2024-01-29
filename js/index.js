@@ -16,6 +16,8 @@ let simToDo = {
     version: "2024.0.2",
     autoSaveTime: conf.autoSaveTime,
     minInputLength: conf.minInputLength,
+    timeLineDayLengthBack: 15,
+    timeLineDayLengthForth: 15,
     activeState: {
         todos: [],
         lang: 'tr',
@@ -206,21 +208,8 @@ let simToDo = {
         let toDos = this.activeState.todos;
 
         let sortedToDoList = toDos.sort((a, b) => b.created - a.created);
+        sortedToDoList = this.filterTheList({filterParams: filterParams, theList: sortedToDoList});
 
-        if (Object.keys(filterParams).length) {
-            sortedToDoList = sortedToDoList.filter(item => {
-                let result = true;
-                Object.keys(filterParams).forEach(paramKey => {
-                    if(filterParams[paramKey]!==null){
-                        if (!(item[paramKey].toString().includes(filterParams[paramKey].toString()))) {
-                            result = false;
-                        }
-                    }
-                })
-                return result;
-            });
-
-        }
         let sortedToDoListLength = sortedToDoList.length;
         lastItemIndex = (lastItemIndex < sortedToDoListLength) ? lastItemIndex : sortedToDoListLength - 1;
 
@@ -303,25 +292,28 @@ let simToDo = {
 
         }
     },
+    createTimeLineDay(movementObj={beginningDate: new Date(),by: 'day', amount:1}){
+        let newDay = this.createElm('div');
+        newDay.classList.add('day');
+        let toDay = new Date();
+        let movedDate = this.moveDateBy(movementObj);
+        let readableDateOfThatDay = this.createReadableDate(movedDate);
+        newDay.innerHTML = readableDateOfThatDay;
+        //console.log((new Date(`${movedDate}`)).toIsoString());
+        newDay.id = `day-${readableDateOfThatDay.toString().replaceAll('.','')}`;
+        return newDay;
+    },
     createTimeLine(){
-        let dayCount = 15;
         let timeLine = document.getElementById(conf.toDoTimeLineContainerId);
-        //console.log(timeLine)
-        for(let x=-15; x<dayCount; x++){
-            let newDay = this.createElm('div');
-            newDay.classList.add('day');
+        for(let x=-this.timeLineDayLengthBack; x<this.timeLineDayLengthForth; x++){
             let toDay = new Date();
             let movementObj = {beginningDate: toDay, by:"day", amount:x};
-            let movedDate = this.moveDateBy(movementObj);
-            let readableDateOfThatDay = this.createReadableDate(movedDate);
-            newDay.innerHTML = readableDateOfThatDay;
-            //console.log((new Date(`${movedDate}`)).toIsoString());
-            newDay.id = `day-${readableDateOfThatDay.toString().replaceAll('.','')}`;
+            let newDay = this.createTimeLineDay(movementObj);
             timeLine.appendChild(newDay);
         }
 
 setTimeout(()=>{
-    document.querySelector('.toDoTimeLineContainer .day:nth-of-type(18)').scrollIntoView({
+    document.querySelector(`.toDoTimeLineContainer .day:nth-of-type(${this.timeLineDayLengthForth})`).scrollIntoView({
         behavior: "smooth", // Optional: for smooth scrolling animation
         block: "center",    // Scroll to center horizontally
     });
@@ -333,15 +325,21 @@ setTimeout(()=>{
             timeLine.scrollLeft += 3*event.deltaY;
             if(event.deltaY>0){
                 //console.log('saga donduruldu');
+                let nextDay = this.createTimeLineDay({beginningDate: new Date(),by: 'day',amount:this.timeLineDayLengthForth+1});
+                this.timeLineDayLengthForth++;
+                timeLine.insertAdjacentElement('beforeend',nextDay);
             }else if(event.deltaY<0){
                 //console.log('sola donduruldu');
+                let prevDay = this.createTimeLineDay({beginningDate: new Date(),by: 'day',amount:-(this.timeLineDayLengthBack+1)});
+                this.timeLineDayLengthBack++;
+                timeLine.insertAdjacentElement('afterbegin',prevDay);
             }
         },{passive:false})
 // TODO:  attach the todos to days
         this.activeState.todos.forEach(todo=>{
             if(todo.intended){
-                let intendedMiliseconds = Date.parse(todo.intended);
-                let slicedDate = new Date(intendedMiliseconds).toISOString().split('T')[0].split('-');
+                let intendedMilliseconds = Date.parse(todo.intended);
+                let slicedDate = new Date(intendedMilliseconds).toISOString().split('T')[0].split('-');
 
                 let targetDayDivId = `day-${slicedDate[1].toString()}${slicedDate[2].toString()}${slicedDate[0].toString()}`;
                 console.log(targetDayDivId);
@@ -359,6 +357,28 @@ setTimeout(()=>{
 
         })
 
+    },
+    filterTheList(filterJob={filterParams:{}, theList:[]}){
+        console.log(filterJob);
+        let resultList=[];
+        let filterParams = filterJob.filterParams;
+        if (Object.keys(filterJob.filterParams).length) {
+            resultList = filterJob.theList.filter(item => {
+                let result = true;
+                Object.keys(filterParams).forEach(paramKey => {
+                    if(filterParams[paramKey]!==null){
+                        if (!(item[paramKey].toString().includes(filterParams[paramKey].toString()))) {
+                            result = false;
+                        }
+                    }
+                })
+                return result;
+            });
+        }else{
+            resultList = filterJob.theList;
+        }
+        console.log(resultList);
+        return resultList;
     },
     createFilterOptionsContainer() {
         let filterOptionsContainer = this.createElm('div');
@@ -450,7 +470,7 @@ setTimeout(()=>{
     },
     createReadableDate(mSeconds) {
         let theDate = new Date(mSeconds);
-        return ((theDate.getMonth() + 1)%12).toString().padStart(2,"0") + '.' + (theDate.getDate()).toString().padStart(2,"0") + '.' + theDate.getUTCFullYear();
+        return ((theDate.getMonth()+1)).toString().padStart(2,"0") + '.' + (theDate.getDate()).toString().padStart(2,"0") + '.' + theDate.getUTCFullYear();
     },
     createUID() {
         let uuid = self.crypto.randomUUID();

@@ -4,8 +4,8 @@
   "alternateStyleFile": "simToDo_alternate.css",
   "autoSaveTime": 10,
   "minInputLength": 3,
-  "itemPerPage": "item-per-page",
-  "maxPagingButton": "max-paging-button",
+  "itemPerPage": 5,
+  "maxPagingButton": 10,
   "textLabels":{
     "tr":{
       "saveButton":"TODO kaydet",

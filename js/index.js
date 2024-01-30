@@ -32,7 +32,7 @@ let simToDo = {
     },
     filterParameters: {},
     init() {
-        document.title=`${this.name} : ${this.version}`
+        document.title=`${this.name} : ${this.version}`;
         this.storageToState();
         this.autoSave();
         this.createAndLoadCSSFiles();
@@ -170,10 +170,18 @@ let simToDo = {
             toDoInputTextarea.focus();
             return false;
         }
+        if(!toDoDateTimeInput.value){
+            this.giveMessage({
+                type: 'error',
+                message: `ToDo date-time must be entered!`
+            })
+            toDoDateTimeInput.focus();
+            return false;
+        }
         let newToDoObject = {
             uuid: this.createUID(),
             body: toDoInputTextarea.value,
-            intended: toDoDateTimeInput.value,
+            intended: (new Date(toDoDateTimeInput.value)).getTime(),
             created: Date.now(),
             updated: Date.now(),
             dependencies: [],
@@ -185,13 +193,15 @@ let simToDo = {
     saveNewToDo(newToDo) {
         //console.log(newToDo);
         this.activeState.todos.push(newToDo);
-        this.clearToDoInput();
+        this.clearToDoInputs();
         this.drawToDos();
         this.stateToStorage();
     },
-    clearToDoInput() {
+    clearToDoInputs() {
         //console.log(conf.toDoInputTextareaId)
+        document.getElementById(conf.toDoDateTimeInputId).value ='';
         document.getElementById(conf.toDoInputTextareaId).value = '';
+        document.getElementById(conf.toDoInputTextareaId).focus();
     },
     updateFilters(filterUpdateObj = {}) {
         Object.keys(filterUpdateObj).forEach(key => {
@@ -209,6 +219,7 @@ let simToDo = {
 
         let sortedToDoList = toDos.sort((a, b) => b.created - a.created);
         sortedToDoList = this.filterTheList({filterParams: filterParams, theList: sortedToDoList});
+        //console.log(sortedToDoList);
 
         let sortedToDoListLength = sortedToDoList.length;
         lastItemIndex = (lastItemIndex < sortedToDoListLength) ? lastItemIndex : sortedToDoListLength - 1;
@@ -216,8 +227,10 @@ let simToDo = {
         toDoListContainer.innerHTML = '';
         toDoListContainer.innerHTML += `<span style="font-weight: bold">${conf.textLabels[conf.defaultLang].totalEntriesTitle} ${sortedToDoListLength.toString()}</span>`;
 
+        //console.log(`First item index: ${firstItemIndex}, last item index: ${lastItemIndex}`)
         for (let j = firstItemIndex; j <= lastItemIndex; j++) {
             let newToDoBox = this.printToDo({theToDo:sortedToDoList[j], rules:{update:true, dependencyButton:true}});
+            //console.log(newToDoBox);
             toDoListContainer.appendChild(newToDoBox);
         }
         let pagingButtonElements = this.createPagination({currentPageNo: pageNo, toDoCount: sortedToDoListLength})
@@ -230,7 +243,7 @@ let simToDo = {
     },
     printToDo(toDoJob={}){
         let theToDo = toDoJob.theToDo;
-        console.log(toDoJob);
+        //console.log(toDoJob);
         let toDoBox = this.createElm('div');
         let readableDateData = this.createReadableDate(theToDo.created);
         let dependencies = theToDo.dependencies.length?theToDo.dependencies.toString():'No dependency';
@@ -301,6 +314,19 @@ let simToDo = {
         newDay.innerHTML = readableDateOfThatDay;
         //console.log((new Date(`${movedDate}`)).toIsoString());
         newDay.id = `day-${readableDateOfThatDay.toString().replaceAll('.','')}`;
+        let todoJobOnThisDay = this.filterTheList({filterParams:{dayId:newDay.id},theList:this.activeState.todos});
+        console.log('DAYJOB:'+(todoJobOnThisDay));
+        if(todoJobOnThisDay.length){
+            todoJobOnThisDay.forEach(todo=>{
+                let toDoReCallButton = this.createElm('button');
+                toDoReCallButton.textContent='ReCall';
+                toDoReCallButton.addEventListener('click',()=>{
+                    this.getDependencyTree(todo);
+                })
+                newDay.appendChild(toDoReCallButton);
+            })
+        }
+
         return newDay;
     },
     createTimeLine(){
@@ -311,15 +337,12 @@ let simToDo = {
             let newDay = this.createTimeLineDay(movementObj);
             timeLine.appendChild(newDay);
         }
-
-setTimeout(()=>{
-    document.querySelector(`.toDoTimeLineContainer .day:nth-of-type(${this.timeLineDayLengthForth})`).scrollIntoView({
-        behavior: "smooth", // Optional: for smooth scrolling animation
-        block: "center",    // Scroll to center horizontally
-    });
-},500)
-
-
+        setTimeout(()=>{
+            document.querySelector(`.toDoTimeLineContainer .day:nth-of-type(${this.timeLineDayLengthForth})`).scrollIntoView({
+                behavior: "smooth", // Optional: for smooth scrolling animation
+                block: "center",    // Scroll to center horizontally
+            });
+        },500)
         timeLine.addEventListener("wheel",(event)=>{
             event.preventDefault();
             timeLine.scrollLeft += 3*event.deltaY;
@@ -335,49 +358,42 @@ setTimeout(()=>{
                 timeLine.insertAdjacentElement('afterbegin',prevDay);
             }
         },{passive:false})
-// TODO:  attach the todos to days
-        this.activeState.todos.forEach(todo=>{
-            if(todo.intended){
-                let intendedMilliseconds = Date.parse(todo.intended);
-                let slicedDate = new Date(intendedMilliseconds).toISOString().split('T')[0].split('-');
-
-                let targetDayDivId = `day-${slicedDate[1].toString()}${slicedDate[2].toString()}${slicedDate[0].toString()}`;
-                console.log(targetDayDivId);
-                if(document.querySelector(`#${targetDayDivId}`)){
-                    let toDoReCallButton = this.createElm('button');
-                    toDoReCallButton.textContent='ReCall';
-
-                    toDoReCallButton.addEventListener('click',()=>{
-                        this.getDependencyTree(todo);
-                    })
-                    document.querySelector(`#${targetDayDivId}`).appendChild(toDoReCallButton);
-                    // this.getDependencyTree(theToDo);
-                }
-            }
-
-        })
-
     },
     filterTheList(filterJob={filterParams:{}, theList:[]}){
-        console.log(filterJob);
+        //console.log(filterJob.filterParams)
         let resultList=[];
         let filterParams = filterJob.filterParams;
         if (Object.keys(filterJob.filterParams).length) {
+            //console.log('Parametre gelmis filter calisacak')
             resultList = filterJob.theList.filter(item => {
                 let result = true;
                 Object.keys(filterParams).forEach(paramKey => {
-                    if(filterParams[paramKey]!==null){
-                        if (!(item[paramKey].toString().includes(filterParams[paramKey].toString()))) {
-                            result = false;
+                        if(paramKey==="dayId"){
+                            let slicedDate = new Date(item.intended).toISOString().split('T')[0].split('-');
+                            let targetDayDivId = `day-${slicedDate[1].toString()}${slicedDate[2].toString()}${slicedDate[0].toString()}`;
+                            if(filterParams.dayId===targetDayDivId){
+                                console.log(filterParams.dayId," | ",targetDayDivId)
+                                result = result && true;
+                            }else{
+                                result = false;
+                            }
                         }
-                    }
+                        if(paramKey==='done'){
+                            if(filterParams[paramKey]!==null){
+                                result = result && item[paramKey].toString()===filterParams[paramKey].toString();
+                            }
+                        }
+
+                        if(paramKey==='body'){
+                            result = result && item[paramKey].toString().includes(filterParams[paramKey],0);
+                        }
                 })
                 return result;
             });
         }else{
             resultList = filterJob.theList;
         }
-        console.log(resultList);
+        //console.log(resultList);
         return resultList;
     },
     createFilterOptionsContainer() {
@@ -478,14 +494,6 @@ setTimeout(()=>{
             uuid = self.crypto.randomUUID();
         }
         return uuid;
-    },
-    convertToDateTimeLocalString(date){
-        const year = date.getFullYear();
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        const day = date.getDate().toString().padStart(2, "0");
-        const hours = date.getHours().toString().padStart(2, "0");
-        const minutes = date.getMinutes().toString().padStart(2, "0");
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
     },
     moveDateBy(movement={beginningDate: new Date(), by:"day", amount:1}){
         //console.log(movement)

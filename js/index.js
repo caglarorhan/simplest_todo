@@ -351,11 +351,15 @@ let simToDo = {
                 let nextDay = this.createTimeLineDay({beginningDate: new Date(),by: 'day',amount:this.timeLineDayLengthForth+1});
                 this.timeLineDayLengthForth++;
                 timeLine.insertAdjacentElement('beforeend',nextDay);
+                this.timeLineDayLengthBack--;
+                timeLine.querySelector('.day:first-of-type').remove();
             }else if(event.deltaY<0){
                 //console.log('sola donduruldu');
                 let prevDay = this.createTimeLineDay({beginningDate: new Date(),by: 'day',amount:-(this.timeLineDayLengthBack+1)});
                 this.timeLineDayLengthBack++;
                 timeLine.insertAdjacentElement('afterbegin',prevDay);
+                this.timeLineDayLengthForth--;
+                timeLine.querySelector('.day:last-of-type').remove();
             }
         },{passive:false})
     },

@@ -239,12 +239,26 @@ let simToDo = {
     getDependencyTree(targetToDoObject){
         let dependencyTree = document.getElementById(conf.toDoDependencyTreeId);
         dependencyTree.innerHTML='';
-        dependencyTree.append(this.printToDo({theToDo:targetToDoObject, rules:{}}));
+        let theToDoBox = this.printToDo({theToDo:targetToDoObject, rules:{treeNodeMode:true, draggable:true}})
+        dependencyTree.append(theToDoBox);
+
+    },
+    getCoordinationData(element){
+        let rect = element.getBoundingClientRect();
+        return {
+                    top: rect.top,
+                    bottom: rect.bottom,
+                    left: rect.left,
+                    right: rect.right,
+                    width: rect.width,
+                    height: rect.height
+                }
     },
     printToDo(toDoJob={}){
         let theToDo = toDoJob.theToDo;
-        //console.log(toDoJob);
+        console.log(toDoJob);
         let toDoBox = this.createElm('div');
+        toDoBox.id = toDoJob.theToDo.uuid;
         let readableDateData = this.createReadableDate(theToDo.created);
         let dependencies = theToDo.dependencies.length?theToDo.dependencies.toString():'No dependency';
         let intendedDate = theToDo.intended ?? "Any time from now" ;
@@ -279,6 +293,38 @@ let simToDo = {
             })
             toDoBox.appendChild(dependButton);
         }
+
+        if(toDoJob.rules.treeNodeMode){
+            toDoBox.style.width=`20vw`;
+            toDoBox.style.margin='auto';
+            toDoBox.style.position='relative';
+            toDoBox.style.top = '20vh';
+
+            let topButton = this.createElm('button');
+            topButton.id = `button-top-${toDoJob.theToDo.uuid}`;
+            topButton.classList.add('connectionButton','cB_top');
+            toDoBox.insertAdjacentElement('afterbegin',topButton);
+
+            let bottomButton = this.createElm('button');
+            bottomButton.id = `button-bottom-${toDoJob.theToDo.uuid}`;
+            bottomButton.classList.add('connectionButton','cB_bottom');
+            toDoBox.insertAdjacentElement('beforeend',bottomButton);
+
+            if(toDoJob.theToDo.dependencies.length){
+                console.log(this.activeState.todos)
+            }
+
+        }
+
+        if(toDoJob.rules.draggable) {
+            toDoBox.draggable = true;
+            toDoBox.style.cursor = 'crosshair';
+
+        }
+
+
+
+
 
         return toDoBox;
     },

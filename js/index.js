@@ -8,6 +8,9 @@
 // TODO: Login with & Save to firebase
 // TODO: Share todos with connected friends or assign todos to them
 // TODO: Styles out to css file // DONE
+// TODO: Material type dependency adding
+// TODO: Visual representation of dependency relations
+// TODO: Remove dependency relations
 
 import conf from '../json/config.json' assert {type: 'json'};
 
@@ -30,6 +33,60 @@ let simToDo = {
         error: `error`,
         success: `success`
     },
+    dependencyTypes:{
+        todo:"todo", // {dependencyType: "todo", uuid: string}
+        material:"material" // {dependencyType: "material", obtained: boolean}
+    },
+    materialTypes: [
+        { typeName: "Groceries", values: [{materialName:'Roman tomato', unit:'kg', amount:1}] },
+        { typeName: "Household Supplies", values: [] },
+        { typeName: "Personal Care", values: [] },
+        { typeName: "Home Maintenance", values: [] },
+        { typeName: "Office/Work Supplies", values: [] },
+        { typeName: "Clothing and Accessories", values: [] },
+        { typeName: "Technology and Electronics", values: [] },
+        { typeName: "Home Decor", values: [] },
+        { typeName: "Health and Wellness", values: [] },
+        { typeName: "Pet Supplies", values: [] },
+        { typeName: "Uncategorized", values: [] }
+    ],
+        materialUnits: [
+            { unitName: "Bag", shortHand: "bag" },
+            { unitName: "Bar", shortHand: "bar" },
+            { unitName: "Bottle", shortHand: "bt" },
+            { unitName: "Box", shortHand: "box" },
+            { unitName: "Bundle", shortHand: "bdl" },
+            { unitName: "Bunch", shortHand: "bch" },
+            { unitName: "Bowl", shortHand: "bw" },
+            { unitName: "Can", shortHand: "cn" },
+            { unitName: "Carton", shortHand: "ctn" },
+            { unitName: "Case", shortHand: "cs" },
+            { unitName: "Centimeter", shortHand: "cm" },
+            { unitName: "Crate", shortHand: "crt" },
+            { unitName: "Cup", shortHand: "cp" },
+            { unitName: "Cylinder", shortHand: "cyl" },
+            { unitName: "Doily", shortHand: "doz" },
+            { unitName: "Dozen", shortHand: "dz" },
+            { unitName: "Each", shortHand: "ea" },
+            { unitName: "Gram", shortHand: "gr" },
+            { unitName: "Inch", shortHand: "in" },
+            { unitName: "Jar", shortHand: "jr" },
+            { unitName: "Kilogram", shortHand: "kg" },
+            { unitName: "Libre", shortHand: "lb" },
+            { unitName: "Meter", shortHand: "m" },
+            { unitName: "Oz", shortHand: "oz" },
+            { unitName: "Packet", shortHand: "pkt" },
+            { unitName: "Piece", shortHand: "pc" },
+            { unitName: "Pint", shortHand: "pt" },
+            { unitName: "Pound", shortHand: "lb" },
+            { unitName: "Quart", shortHand: "qt" },
+            { unitName: "Roll", shortHand: "rl" },
+            { unitName: "Sachet", shortHand: "sacht" },
+            { unitName: "Scoop", shortHand: "sc" },
+            { unitName: "Slice", shortHand: "sl" },
+            { unitName: "Stick", shortHand: "stk" },
+            { unitName: "Tray", shortHand: "tr" },
+        ],
     filterParameters: {},
     init() {
         document.title=`${this.name} : ${this.version}`;
@@ -229,7 +286,7 @@ let simToDo = {
 
         //console.log(`First item index: ${firstItemIndex}, last item index: ${lastItemIndex}`)
         for (let j = firstItemIndex; j <= lastItemIndex; j++) {
-            let newToDoBox = this.printToDo({theToDo:sortedToDoList[j], rules:{update:true, dependencyButton:true}});
+            let newToDoBox = this.printToDo({theToDo:sortedToDoList[j], rules:{update:true, dependencyButton:true, draggable:true}});
             //console.log(newToDoBox);
             toDoListContainer.appendChild(newToDoBox);
         }
@@ -239,7 +296,7 @@ let simToDo = {
     getDependencyTree(targetToDoObject){
         let dependencyTree = document.getElementById(conf.toDoDependencyTreeId);
         dependencyTree.innerHTML='';
-        let theToDoBox = this.printToDo({theToDo:targetToDoObject, rules:{treeNodeMode:true, draggable:true}})
+        let theToDoBox = this.printToDo({theToDo:targetToDoObject, rules:{treeNodeMode:true, draggable:true, droppable:true}})
         dependencyTree.append(theToDoBox);
 
     },
@@ -255,12 +312,23 @@ let simToDo = {
                 }
     },
     printToDo(toDoJob={}){
+        /*
+        toDoJob.rules = {
+        update: // if updatable
+        dependencyButton: // id can be used to add some dependency
+        treeNodeMode: //if open to be in a treeMode
+        draggable: // if it can be dragged
+        droppable: if you can drop something
+        }
+
+         */
         let theToDo = toDoJob.theToDo;
         console.log(toDoJob);
+        console.log(toDoJob.rules);
         let toDoBox = this.createElm('div');
         toDoBox.id = toDoJob.theToDo.uuid;
         let readableDateData = this.createReadableDate(theToDo.created);
-        let dependencies = theToDo.dependencies.length?theToDo.dependencies.toString():'No dependency';
+        let dependencies = theToDo.dependencies.length?'Has dependencies':'No dependency';
         let intendedDate = theToDo.intended ?? "Any time from now" ;
         let doneStatus = `${theToDo.done.toString() === `true` ? " done" : "not yet"}`
 
@@ -286,7 +354,7 @@ let simToDo = {
 
         if(toDoJob.rules.dependencyButton){
             let dependButton = this.createElm('button');
-            dependButton.textContent='Dependency';
+            dependButton.textContent='ReCall';
             dependButton.style.float='right';
             dependButton.addEventListener("click", () => {
                 this.getDependencyTree(theToDo);
@@ -304,26 +372,48 @@ let simToDo = {
             topButton.id = `button-top-${toDoJob.theToDo.uuid}`;
             topButton.classList.add('connectionButton','cB_top');
             toDoBox.insertAdjacentElement('afterbegin',topButton);
+            topButton.title = 'This todo is not a dependency of any!';
 
             let bottomButton = this.createElm('button');
             bottomButton.id = `button-bottom-${toDoJob.theToDo.uuid}`;
             bottomButton.classList.add('connectionButton','cB_bottom');
+            bottomButton.title = 'No dependencies here!'
             toDoBox.insertAdjacentElement('beforeend',bottomButton);
+            if(toDoJob.theToDo.dependencies.length) {
+                bottomButton.classList.add('hasDependencies');
+                bottomButton.title = 'To see dependencies click here!'
+            }
+
+            let rightBottomButton = this.createElm('button');
+            rightBottomButton.id = `button-rightbottom-${toDoJob.theToDo.uuid}`;
+            rightBottomButton.classList.add('connectionButton','cB_rightBottom');
+            toDoBox.insertAdjacentElement('beforeend',rightBottomButton);
+            rightBottomButton.title = 'Add material dependency to this todo!';
+
+
+
 
             if(toDoJob.theToDo.dependencies.length){
                 console.log(this.activeState.todos)
             }
-
         }
 
-        if(toDoJob.rules.draggable) {
+
+        if(toDoJob.rules.draggable){
             toDoBox.draggable = true;
-            toDoBox.style.cursor = 'crosshair';
-
+            toDoBox.style.cursor = 'grab';
+            toDoBox.addEventListener('dragstart', this.dragStartHandler.bind(this));
+            toDoBox.addEventListener('dragover', this.dragOverHandler.bind(this));
+            //toDoBox.addEventListener('dragleave', this.dragLeaveHandler.bind(this));
+            //toDoBox.addEventListener('dragend', this.dragEndHandler.bind(this));
+            // toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
+            //toDoBox.addEventListener('drag', this.dragHandler.bind(this));
         }
-
-
-
+        if(toDoJob.rules.droppable){
+            toDoBox.droppable = true;
+            toDoBox.addEventListener('drop', this.dropHandler.bind(this));
+            toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
+        }
 
 
         return toDoBox;
@@ -436,6 +526,9 @@ let simToDo = {
 
                         if(paramKey==='body'){
                             result = result && item[paramKey].toString().includes(filterParams[paramKey],0);
+                        }
+                        if(paramKey==='uuid'){
+                            result = result && item[paramKey].toString()===filterParams[paramKey].toString();
                         }
                 })
                 return result;
@@ -574,6 +667,67 @@ let simToDo = {
                 console.log(messageObject.success);
                 break;
         }
+    },
+    dragHandler(ev){
+        ev.preventDefault();
+        let offsetX;
+        let offsetY;
+        let target = ev.target;
+        target.style.left = (ev.clientX - offsetX) + "px";
+        target.style.top = (ev.clientY - offsetY) + "px";
+        console.log(`Drag basladi ve aktif...`)
+
+    },
+    dragStartHandler(ev){
+        let target = ev.target;
+        target.style.cursor= 'grabbing';
+        console.log(`${target.id} nesnesinin dragStart olayi basladi`);
+        ev.dataTransfer.setData("text", ev.target.id);
+        //ev.dataTransfer.effectAllowed = "move";
+    },
+    dragOverHandler(ev){
+        ev.preventDefault();
+        let target = ev.target;
+        target.style.border = '1px dotted #ccc solid';
+        //console.log(`${target.id} nesnesi bir drop alaninda dragOver tetiklendi`)
+        //ev.dataTransfer.dropEffect = "move";
+    },
+    dragEnterHandler(ev){
+        // hedef droppable nesneye ait bir event
+        let target = ev.target;
+        console.log(`${target.id} nesnesi bir drop alanina girdi dragEnter tetiklendi.`);
+        target.classList.add('dropZone');
+    },
+    dragLeaveHandler(ev){
+        let target = ev.target;
+        console.log(`${target.id} nesnesi bir drop alanindan cikti dragLeave tetiklendi.`);
+
+    },
+    dropHandler(ev){
+        ev.preventDefault();
+        let target = ev.target;
+        console.log(`${target.id} nesnesi drop oldu. drop tetiklendi`);
+        const data = ev.dataTransfer.getData("text");
+        let indexNo =this.activeState.todos.findIndex(item => item.uuid === target.id);
+        let dependencies = this.activeState.todos[indexNo].dependencies;
+        console.log(dependencies);
+        let foundIndex = dependencies.findIndex(dependency => dependency.uuid === data)
+        console.log(foundIndex);
+        if(foundIndex===-1){
+            dependencies.push({dependencyType: "todo", uuid: data});
+            this.saveTheState();
+        }else{
+            alert('This dependency has already added to this todo!');
+            return false;
+        }
+    },
+    dragEndHandler(ev){
+        // suruklenen nesneye ait bir event
+        ev.preventDefault();
+        let target = ev.target;
+        target.classList.add('dragging');
+        console.log(`${target.id} nesnesine ait suruklenme sona erdi dragEnd tetiklendi`);
+
     }
 };
 

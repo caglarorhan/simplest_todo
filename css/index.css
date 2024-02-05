@@ -38,7 +38,7 @@ h2{
     box-sizing: border-box;
     border: 1px solid green;
     margin-bottom: 5px;
-    padding: 5px;
+    padding: 10px;
     border-radius: 5px;
 }
 .toDoBoxInList:hover{
@@ -149,7 +149,7 @@ input[type="range"] {
     scroll-behavior: smooth;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* Edge and IE */
-    /* scroll-snap-type: x mandatory; */
+    scroll-snap-type: x mandatory;
 }
 
 .toDoTimeLineContainer::-webkit-scrollbar {
@@ -176,15 +176,43 @@ input[type="range"] {
     background-color: #3498db; /* Set your desired button color */
     color: #fff; /* Set your desired text color */
     border: none;
-    cursor: pointer;
     left: 50%;
     transform: translateX(-50%);
     border-radius: 50%;
 }
+.connectionButton:hover{
+    border: 2px solid white;
+}
+.hasDependencies{
+    background-color: deeppink;
+    cursor: pointer;
+}
+.isDependency{
+    background-color: coral;
+    cursor: pointer;
+}
 
 .cB_top{
-    margin-top: -15px;
+    margin-top: -19px;
 }
 .cB_bottom{
-    margin-top: 14px;
+    margin-top: 19px;
+}
+
+.cB_rightBottom{
+    background-color: brown;
+    bottom:-10px;
+    right:-20px;
+    margin-left: auto;
+    margin-top: 29px;
+}
+
+.dropZone{
+    border: 1px dashed red;
+}
+
+.draggingZone{
+    background-color: brown;
+    color:white;
+    border: 1px dashed green;
 }

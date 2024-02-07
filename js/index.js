@@ -38,7 +38,7 @@ let simToDo = {
         material:"material" // {dependencyType: "material", obtained: boolean}
     },
     materialTypes: [
-        { typeName: "Groceries", values: [{materialName:'Roman tomato', unit:'kg', amount:1}] },
+        { typeName: "Groceries", values: [{materialName:'Roman tomato', unit:'kg', amount:1},{materialName:'Beef tomato', unit:'kg', amount:1},{materialName:'Grape tomato', unit:'kg', amount:1}]},
         { typeName: "Household Supplies", values: [] },
         { typeName: "Personal Care", values: [] },
         { typeName: "Home Maintenance", values: [] },
@@ -374,21 +374,37 @@ let simToDo = {
             toDoBox.insertAdjacentElement('afterbegin',topButton);
             topButton.title = 'This todo is not a dependency of any!';
 
+
             let bottomButton = this.createElm('button');
             bottomButton.id = `button-bottom-${toDoJob.theToDo.uuid}`;
             bottomButton.classList.add('connectionButton','cB_bottom');
             bottomButton.title = 'No dependencies here!'
             toDoBox.insertAdjacentElement('beforeend',bottomButton);
-            if(toDoJob.theToDo.dependencies.length) {
+            let todoDependencies = toDoJob.theToDo.dependencies.filter(dependency=>dependency.dependencyType==='todo');
+            if(todoDependencies.length) {
                 bottomButton.classList.add('hasDependencies');
-                bottomButton.title = 'To see dependencies click here!'
+                bottomButton.textContent = todoDependencies.length;
+                bottomButton.title = `To see ${todoDependencies.length} dependencies click here!`
+            }else{
+                bottomButton.textContent=0;
             }
 
             let rightBottomButton = this.createElm('button');
             rightBottomButton.id = `button-rightbottom-${toDoJob.theToDo.uuid}`;
             rightBottomButton.classList.add('connectionButton','cB_rightBottom');
             toDoBox.insertAdjacentElement('beforeend',rightBottomButton);
+            let materialDependencies = toDoJob.theToDo.dependencies.filter(dependency => dependency.dependencyType==='material');
             rightBottomButton.title = 'Add material dependency to this todo!';
+            if(materialDependencies.length){
+                rightBottomButton.classList.add('hasDependencies');
+                rightBottomButton.textContent = todoDependencies.length;
+            }else{
+                rightBottomButton.textContent=0;
+
+            }
+            rightBottomButton.addEventListener('click', (event)=>{
+                this.createMaterialAddingForm(event,toDoJob.theToDo.uuid)
+            })
 
 
 
@@ -682,7 +698,8 @@ let simToDo = {
         let target = ev.target;
         target.style.cursor= 'grabbing';
         console.log(`${target.id} nesnesinin dragStart olayi basladi`);
-        ev.dataTransfer.setData("text", ev.target.id);
+        let transferredData = {dependencyType: "todo", uuid: ev.target.id}
+        ev.dataTransfer.setData("application/json", JSON.stringify(transferredData));
         //ev.dataTransfer.effectAllowed = "move";
     },
     dragOverHandler(ev){
@@ -707,19 +724,11 @@ let simToDo = {
         ev.preventDefault();
         let target = ev.target;
         console.log(`${target.id} nesnesi drop oldu. drop tetiklendi`);
-        const data = ev.dataTransfer.getData("text");
-        let indexNo =this.activeState.todos.findIndex(item => item.uuid === target.id);
-        let dependencies = this.activeState.todos[indexNo].dependencies;
-        console.log(dependencies);
-        let foundIndex = dependencies.findIndex(dependency => dependency.uuid === data)
-        console.log(foundIndex);
-        if(foundIndex===-1){
-            dependencies.push({dependencyType: "todo", uuid: data});
-            this.saveTheState();
-        }else{
-            alert('This dependency has already added to this todo!');
-            return false;
-        }
+        let transferredData = ev.dataTransfer.getData("application/json");
+        transferredData = JSON.parse(transferredData);
+        let dependencyObj ={targetUUID:target.id.toString(), dependentData:transferredData};
+        this.addDependencyToToDo(dependencyObj);
+
     },
     dragEndHandler(ev){
         // suruklenen nesneye ait bir event
@@ -727,6 +736,163 @@ let simToDo = {
         let target = ev.target;
         target.classList.add('dragging');
         console.log(`${target.id} nesnesine ait suruklenme sona erdi dragEnd tetiklendi`);
+
+    },
+    addDependencyToToDo(dependencyObj={targetUUID:'', dependentData:{}}){
+        //console.log(dependencyObj.targetUUID,':', dependencyObj.dependentData.uuid)
+        let dependencyType = dependencyObj.dependentData.dependencyType;
+        let targetUUID = dependencyObj.targetUUID;
+
+        if(dependencyType==='todo'){
+            // {dependencyType: "todo", uuid: ev.target.id}
+            let targetToDo = this.activeState.todos.filter(item => item.uuid === targetUUID);
+            let dependencies = targetToDo[0].dependencies;
+            let foundIndexNoInDependencies = dependencies.findIndex(dependence => {
+               return dependence.dependencyType==='todo' && dependence.uuid===dependencyObj.dependentData.uuid
+            })
+            if(foundIndexNoInDependencies===-1){
+                dependencies.push(dependencyObj.dependentData);
+                this.saveTheState();
+            }else{
+                alert('This dependency has already added to this todo!');
+                return false;
+            }
+        }else if(dependencyType==='material'){
+
+        }
+
+    },
+    createMaterialAddingForm(event,uuid){
+        let triggerButton = event.target;
+        let coords = this.getCoordinationData(triggerButton);
+        let materialFormDiv = this.createElm('div');
+        materialFormDiv.id =`material-add-${uuid}`;
+        materialFormDiv.classList.add('material-adding-form');
+        materialFormDiv.style.position = 'absolute';
+        materialFormDiv.style.left = coords.left + 'px';
+        materialFormDiv.style.top = coords.top + 'px';
+console.log(this);
+        materialFormDiv.innerHTML=this.getTemplate["material-form"]({uuid:uuid, materialTypes:this.materialTypes, materialUnits:this.materialUnits});
+        document.body.insertAdjacentElement('afterend',materialFormDiv);
+
+        document.querySelector(`#material-type-${uuid}`).selectedIndex =0;
+
+        document.getElementById(`close-button-${uuid}`).addEventListener('click',()=>{
+            document.getElementById(`material-add-${uuid}`).remove();
+        })
+        document.getElementById(`material-type-${uuid}`).addEventListener('change',()=>{
+
+        })
+        document.getElementById(`material-save-button-${uuid}`).addEventListener('click',()=>{
+                // TODO: Tum material verisi todo nun dependencies kismina kaydolacak.
+        })
+
+        document.getElementById(`material-search-${uuid}`).addEventListener('keyup',(event)=>{
+            let positioningTarget = document.getElementById(`material-search-${uuid}`);
+            let selectedMaterialType = document.getElementById(`material-type-${uuid}`).value;
+            let typedSearchPart = positioningTarget.value;
+
+            let suggestedMaterials = this.materialTypes.filter(materialType=>materialType.typeName===selectedMaterialType)[0].values.map(material=> material.materialName).filter(materialName=>materialName.includes(typedSearchPart));
+            console.log(suggestedMaterials);
+            this.createSuggestions({event: event, positioningTarget: positioningTarget, inputSource: positioningTarget, suggestions:suggestedMaterials })
+
+
+        })
+    },
+    getTemplate:{
+        "material-form": (dataObj={})=>{
+            let materialTypeOptions = dataObj.materialTypes.map(type=>`<option value="${type.typeName}">${type.typeName}</option>`).join('');
+            let materialUnits = dataObj.materialUnits.map(unit=>`<option value="${unit.shortHand}">${unit.unitName}</option>`).join('');
+
+            return `
+                    <div>
+                        <div><span class="info" title="TODO: ${dataObj.uuid}">ⓘ</span><button id="close-button-${dataObj.uuid}" style="cursor:pointer; position: absolute; top:2px; right:2px; border-radius: 5px;" title="Close material adding form">X</button></div>
+                        <div>Material Type:<select id="material-type-${dataObj.uuid}">${materialTypeOptions}</select></div>
+                        <div>Material: <input type="search" id="material-search-${dataObj.uuid}"> </div>
+                        <div><input type="number" step="0.1" min="0" width="30px"><select id="materialUnit">${materialUnits}</select></div>
+                        <div><button id="material-save-button-${dataObj.uuid}">ADD AS DEPENDENCY</button></div>
+                    </div>
+            `;
+        }
+    },
+    createSuggestions(dataObj={event: {}, positioningTarget:document.body, inputSource:document.body,suggestions:[]}){
+        let positioningTarget = dataObj.positioningTarget;
+        let heightOfASuggestionDiv = 25;
+        let ev = dataObj.event;
+        if(!dataObj.inputSource.value || dataObj.inputSource.value.trim()==='' || dataObj.inputSource.value.trim().length<3){
+            removeAllSuggestions();
+            return;
+        }
+        let moveOnSuggestions = (move)=>{
+            console.log(move)
+            // up, down, enter
+            let suggestionOptions = document.querySelectorAll('.material-suggestions');
+            let suggestionFocusedOptions = document.querySelectorAll('.material-suggestions.focused');
+            if(suggestionFocusedOptions.length){
+                console.log('bir secenek seciliymis');
+                if(move==='enter'){
+                    dataObj.inputSource.value = [...suggestionFocusedOptions][0].innerText;
+                    suggestionOptions.forEach(s=>s.remove());
+                }else{
+                    for(let i=0; i<suggestionOptions.length; i++){
+                        let theSuggestionOption = [...suggestionOptions][i];
+                        if(theSuggestionOption.classList.contains('focused')){
+                            theSuggestionOption.classList.remove('focused');
+                            let moveSide = (move==='down')? 1: -1;
+                            let nextIndex = ((i+moveSide)+suggestionOptions.length) % suggestionOptions.length;
+
+                            [...suggestionOptions][nextIndex].classList.add('focused');
+                            break;
+                        }
+                    }
+                }
+
+            }else{
+                [...suggestionOptions][0].classList.add('focused');
+            }
+        }
+        //
+        function removeAllSuggestions(){
+            document.querySelectorAll('.material-suggestions').forEach(suggestionDiv=>suggestionDiv.remove());
+        }
+        //
+        if(["ArrowUp", "ArrowDown", "Enter"].includes(ev.key)){
+            switch(ev.key){
+                case 'ArrowUp':
+                    ev.preventDefault();
+                    moveOnSuggestions('up');
+
+                    break;
+                case 'ArrowDown':
+                    ev.preventDefault();
+                    moveOnSuggestions('down');
+                    break;
+                case 'Enter':
+                    ev.preventDefault();
+                    moveOnSuggestions('enter');
+                    break;
+            }
+            //
+        }else{
+            removeAllSuggestions();
+            dataObj.suggestions.forEach(suggestion=>{
+                console.log(suggestion + ' yazildi')
+                let newDiv = this.createElm('div');
+                let positionStartLeft = this.getCoordinationData(positioningTarget).left;
+                let positionStartTop = this.getCoordinationData(positioningTarget).top;
+                newDiv.innerText = suggestion;
+                newDiv.style.width =200 + 'px';
+                newDiv.classList.add('material-suggestions');
+                newDiv.style.left = positionStartLeft + 'px';
+                newDiv.style.top = (positionStartTop+ heightOfASuggestionDiv) + 'px';
+                positioningTarget.insertAdjacentElement('afterend',newDiv);
+                positioningTarget=newDiv;
+                newDiv.addEventListener('click',()=>{
+                    dataObj.inputSource.value = newDiv.textContent;
+                    removeAllSuggestions();
+                })
+            })
+        }
 
     }
 };

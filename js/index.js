@@ -771,7 +771,7 @@ let simToDo = {
     refreshMaterialList(dataObj={uuid:null}){
         console.log('DATa OBJ: ',dataObj.uuid);
         if(!dataObj.uuid) return false;
-        document.getElementById(`material-list-${dataObj.uuid}`).innerHTML = this.getTemplate["material-in-list"](this.giveDependentMaterialList({uuid:dataObj.uuid}));
+        document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"](this.giveDependentMaterialList({uuid:dataObj.uuid}));
     },
     createMaterialAddingForm(event,uuid){
         let triggerButton = event.target;
@@ -847,16 +847,14 @@ console.log(this);
     giveDependentMaterialList(dataObj={uuid:null}){
         if(!dataObj.uuid){ return false;}
         let theToDo = this.activeState.todos.filter(todo=>todo.uuid ===dataObj.uuid)[0];
-        console.log('theToDo:', theToDo);
         let theDependencies = theToDo.dependencies;
-        console.log('theDependencies:', theDependencies);
         return theDependencies.filter(dependency=>dependency.dependencyType==="material");
     },
     getTemplate:{
         "material-in-list":(dataObj)=>{
             console.log(dataObj);
             let listOfMaterials=''
-            listOfMaterials+='';
+            listOfMaterials+='<h5>List of Materials</h5>';
             dataObj.forEach(materialData=>{
                 listOfMaterials+=`<div>${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
             })
@@ -882,7 +880,7 @@ console.log(this);
                         <div>
                         <button id="material-save-button-${dataObj.uuid}">ADD AS DEPENDENCY</button>
                         </div>
-                        <div id="material-list-${dataObj.uuid}">List of materials</div>
+                        <div class="list-of-materials" id="material-list-${dataObj.uuid}">List of materials</div>
                     </div>
             `;
         }

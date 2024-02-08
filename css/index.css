@@ -246,3 +246,8 @@ span.info{
     height:20px;
     cursor:pointer;
 }
+
+.list-of-materials{
+    max-height: 170px;
+    overflow-y: auto;
+}

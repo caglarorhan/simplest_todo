@@ -531,6 +531,7 @@ let simToDo = {
                 let result = true;
                 Object.keys(filterParams).forEach(paramKey => {
                         if(paramKey==="dayId" && item.intended){
+                            console.log(`item: `,item)
                             let slicedDate = new Date(item.intended).toISOString().split('T')[0].split('-');
                             let targetDayDivId = `day-${slicedDate[1].toString()}${slicedDate[2].toString()}${slicedDate[0].toString()}`;
                             if(filterParams.dayId===targetDayDivId){

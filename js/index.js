@@ -522,7 +522,7 @@ let simToDo = {
         },{passive:false})
     },
     filterTheList(filterJob={filterParams:{}, theList:[]}){
-        console.log('Listedeki gun sayisi:',filterJob.theList.length);
+        console.log('Listedeki gun sayisi:',filterJob.theList);
         let resultList=[];
         let filterParams = filterJob.filterParams;
         if (Object.keys(filterJob.filterParams).length && filterJob.theList.length) {

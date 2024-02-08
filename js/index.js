@@ -525,7 +525,7 @@ let simToDo = {
         //console.log(filterJob.filterParams)
         let resultList=[];
         let filterParams = filterJob.filterParams;
-        if (Object.keys(filterJob.filterParams).length) {
+        if (Object.keys(filterJob.filterParams).length && filterJob.theList.length) {
             //console.log('Parametre gelmis filter calisacak')
             resultList = filterJob.theList.filter(item => {
                 let result = true;

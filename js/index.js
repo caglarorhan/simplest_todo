@@ -460,7 +460,7 @@ let simToDo = {
     createTimeLineDay(movementObj={beginningDate: new Date(),by: 'day', amount:1}){
         let newDay = this.createElm('div');
         newDay.classList.add('day');
-        let toDay = new Date();
+        //let toDay = new Date();
         let movedDate = this.moveDateBy(movementObj);
         let readableDateOfThatDay = this.createReadableDate(movedDate);
         newDay.innerHTML = readableDateOfThatDay;
@@ -486,13 +486,18 @@ let simToDo = {
         for(let x=-this.timeLineDayLengthBack; x<this.timeLineDayLengthForth; x++){
             let toDay = new Date();
             let movementObj = {beginningDate: toDay, by:"day", amount:x};
+            //console.log(movementObj);
             let newDay = this.createTimeLineDay(movementObj);
             timeLine.appendChild(newDay);
         }
         setTimeout(()=>{
-            document.querySelector(`.toDoTimeLineContainer .day:nth-of-type(${this.timeLineDayLengthForth})`).scrollIntoView({
+            let readableDateOfToday = this.createReadableDate(new Date().getTime());
+            let toDaysId = `day-${readableDateOfToday.toString().replaceAll('.','')}`;
+            console.log(toDaysId);
+            document.querySelector(`#${toDaysId}`).scrollIntoView({
                 behavior: "smooth", // Optional: for smooth scrolling animation
-                block: "center",    // Scroll to center horizontally
+                block: "nearest",    // Scroll to center horizontally
+                inline: "center", // Scroll to center
             });
         },500)
         timeLine.addEventListener("wheel",(event)=>{

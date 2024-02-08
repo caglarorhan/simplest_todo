@@ -530,7 +530,7 @@ let simToDo = {
             resultList = filterJob.theList.filter(item => {
                 let result = true;
                 Object.keys(filterParams).forEach(paramKey => {
-                        if(paramKey==="dayId"){
+                        if(paramKey==="dayId" && item.intended){
                             let slicedDate = new Date(item.intended).toISOString().split('T')[0].split('-');
                             let targetDayDivId = `day-${slicedDate[1].toString()}${slicedDate[2].toString()}${slicedDate[0].toString()}`;
                             if(filterParams.dayId===targetDayDivId){

@@ -69,6 +69,7 @@ let simToDo = {
             { unitName: "Dozen", shortHand: "dz" },
             { unitName: "Each", shortHand: "ea" },
             { unitName: "Gram", shortHand: "gr" },
+            { unitName: "Gallon", shortHand: "gal" },
             { unitName: "Inch", shortHand: "in" },
             { unitName: "Jar", shortHand: "jr" },
             { unitName: "Kilogram", shortHand: "kg" },
@@ -397,7 +398,7 @@ let simToDo = {
             rightBottomButton.title = 'Add material dependency to this todo!';
             if(materialDependencies.length){
                 rightBottomButton.classList.add('hasDependencies');
-                rightBottomButton.textContent = todoDependencies.length;
+                rightBottomButton.textContent = materialDependencies.length;
             }else{
                 rightBottomButton.textContent=0;
 
@@ -767,6 +768,11 @@ let simToDo = {
         }
 
     },
+    refreshMaterialList(dataObj={uuid:null}){
+        console.log('DATa OBJ: ',dataObj.uuid);
+        if(!dataObj.uuid) return false;
+        document.getElementById(`material-list-${dataObj.uuid}`).innerHTML = this.getTemplate["material-in-list"](this.giveDependentMaterialList({uuid:dataObj.uuid}));
+    },
     createMaterialAddingForm(event,uuid){
         let triggerButton = event.target;
         let coords = this.getCoordinationData(triggerButton);
@@ -778,7 +784,10 @@ let simToDo = {
         materialFormDiv.style.top = coords.top + 'px';
 console.log(this);
         materialFormDiv.innerHTML=this.getTemplate["material-form"]({uuid:uuid, materialTypes:this.materialTypes, materialUnits:this.materialUnits});
-        document.body.insertAdjacentElement('afterend',materialFormDiv);
+        document.body.insertAdjacentElement('beforeend',materialFormDiv);
+        this.refreshMaterialList({uuid:uuid});
+
+
 
         document.querySelector(`#material-type-${uuid}`).selectedIndex =0;
 
@@ -790,6 +799,37 @@ console.log(this);
         })
         document.getElementById(`material-save-button-${uuid}`).addEventListener('click',()=>{
                 // TODO: Tum material verisi todo nun dependencies kismina kaydolacak.
+            let materialType = document.getElementById(`material-type-${uuid}`).value;
+            let materialName = document.getElementById(`material-search-${uuid}`).value;
+            let materialAmount = document.getElementById(`material-amount-${uuid}`).value
+            let materialUnit = document.getElementById(`material-unit-${uuid}`).value
+            let newMaterial = {dependencyType:"material", materialType:materialType, materialName:materialName, unit:materialUnit, amount:materialAmount, addTime: new Date().getTime(), obtainedTime: null, isObtained: false}
+            // Bu materialType daha onceden kayitli mi
+            let filteredByType = this.materialTypes.filter(eachType=>{
+                return eachType.typeName===materialType;
+            })
+
+            let filteredByMaterial = filteredByType[0].values.filter(material=>{
+                console.log(material.materialName,":",materialName)
+                return material.materialName===materialName;
+            })
+            if(!filteredByMaterial.length){
+                filteredByType[0].values.push({materialName:materialName, unit:materialUnit, amount:materialAmount})
+            }else{
+                filteredByMaterial[0]={materialName:materialName, unit:materialUnit, amount:materialAmount};
+            }
+
+            this.activeState.todos.filter(todo=>todo.uuid ===uuid)[0].dependencies.push(newMaterial);
+            this.saveTheState();
+            resetMaterialForm();
+            this.refreshMaterialList({uuid:uuid});
+
+            function resetMaterialForm(){
+                document.getElementById(`material-type-${uuid}`).selectedIndex = 0;
+                materialName = '';
+                materialAmount = '';
+                document.getElementById(`material-unit-${uuid}`).selectedIndex=0;
+            }
         })
 
         document.getElementById(`material-search-${uuid}`).addEventListener('keyup',(event)=>{
@@ -800,11 +840,28 @@ console.log(this);
             let suggestedMaterials = this.materialTypes.filter(materialType=>materialType.typeName===selectedMaterialType)[0].values.map(material=> material.materialName).filter(materialName=>materialName.includes(typedSearchPart));
             console.log(suggestedMaterials);
             this.createSuggestions({event: event, positioningTarget: positioningTarget, inputSource: positioningTarget, suggestions:suggestedMaterials })
-
-
         })
+
+
+    },
+    giveDependentMaterialList(dataObj={uuid:null}){
+        if(!dataObj.uuid){ return false;}
+        let theToDo = this.activeState.todos.filter(todo=>todo.uuid ===dataObj.uuid)[0];
+        console.log('theToDo:', theToDo);
+        let theDependencies = theToDo.dependencies;
+        console.log('theDependencies:', theDependencies);
+        return theDependencies.filter(dependency=>dependency.dependencyType==="material");
     },
     getTemplate:{
+        "material-in-list":(dataObj)=>{
+            console.log(dataObj);
+            let listOfMaterials=''
+            listOfMaterials+='';
+            dataObj.forEach(materialData=>{
+                listOfMaterials+=`<div>${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
+            })
+            return listOfMaterials;
+        },
         "material-form": (dataObj={})=>{
             let materialTypeOptions = dataObj.materialTypes.map(type=>`<option value="${type.typeName}">${type.typeName}</option>`).join('');
             let materialUnits = dataObj.materialUnits.map(unit=>`<option value="${unit.shortHand}">${unit.unitName}</option>`).join('');
@@ -812,10 +869,20 @@ console.log(this);
             return `
                     <div>
                         <div><span class="info" title="TODO: ${dataObj.uuid}">ⓘ</span><button id="close-button-${dataObj.uuid}" style="cursor:pointer; position: absolute; top:2px; right:2px; border-radius: 5px;" title="Close material adding form">X</button></div>
-                        <div>Material Type:<select id="material-type-${dataObj.uuid}">${materialTypeOptions}</select></div>
-                        <div>Material: <input type="search" id="material-search-${dataObj.uuid}"> </div>
-                        <div><input type="number" step="0.1" min="0" width="30px"><select id="materialUnit">${materialUnits}</select></div>
-                        <div><button id="material-save-button-${dataObj.uuid}">ADD AS DEPENDENCY</button></div>
+                        <div>
+                        Material Type:<select id="material-type-${dataObj.uuid}">${materialTypeOptions}</select>
+                        </div>
+                        <div>
+                        Material: <input type="search" id="material-search-${dataObj.uuid}"> 
+                        </div>
+                        <div style="display:flex; flex-direction: row; justify-content: space-between;">
+                            <div style="flex-grow: 1">Amount:<input id="material-amount-${dataObj.uuid}" type="number" step="0.1" min="0" width="30px"></div>
+                            <div style="flex-grow: 1"><select id="material-unit-${dataObj.uuid}">${materialUnits}</select></div>
+                        </div>
+                        <div>
+                        <button id="material-save-button-${dataObj.uuid}">ADD AS DEPENDENCY</button>
+                        </div>
+                        <div id="material-list-${dataObj.uuid}">List of materials</div>
                     </div>
             `;
         }

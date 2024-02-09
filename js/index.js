@@ -468,7 +468,7 @@ let simToDo = {
         //console.log((new Date(`${movedDate}`)).toIsoString());
         newDay.id = `day-${readableDateOfThatDay.toString().replaceAll('.','')}`;
         let todoJobOnThisDay = this.filterTheList({filterParams:{dayId:newDay.id},theList:this.activeState.todos});
-        //console.log('DAYJOB:'+(todoJobOnThisDay));
+        //console.log(`DAYJOB ID: ${newDay.id},  TODO LIST: ${todoJobOnThisDay}`);
         if(todoJobOnThisDay.length){
             todoJobOnThisDay.forEach(todo=>{
                 let toDoReCallButton = this.createElm('button');

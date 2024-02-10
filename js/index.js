@@ -3,15 +3,20 @@
 // TODO: config.json file applying // DONE
 // TODO: save filter parameters // DONE
 // TODO: Search from saved todos // DONE
+// TODO: Edit old todos
+// TODO: Archiving todos
+// TODO: weekly and monthly summaries
 // TODO: Add estimated completing date and time to TODOs
 // TODO: To set dependency relations (prerequest-postrequest)
 // TODO: Login with & Save to firebase
-// TODO: Share todos with connected friends or assign todos to them
+// TODO: Share todos with connected friends and sharing, passing, assigning todos to each other
 // TODO: Styles out to css file // DONE
 // TODO: Material type dependency adding
 // TODO: Visual representation of dependency relations
 // TODO: Remove dependency relations
 // TODO: Adding r auto creating tags for ToDos
+// TODO: Manage all functions with audio directions
+// TODO: Challenging and gamification adding
 
 import conf from '../json/config.json' assert {type: 'json'};
 
@@ -91,6 +96,7 @@ let simToDo = {
         ],
     permissions:{
         speechRecognition: null,
+        position:{}
     },
     filterParameters: {},
     init() {
@@ -111,6 +117,33 @@ let simToDo = {
             this.permissions.speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         } else {
             console.log('Sorry, your browser does not support speech recognition.');
+        }
+
+        //asking for geolocation
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((position)=> {
+                   this.position = position;
+                    //var latitude = position.coords.latitude;
+                    //var longitude = position.coords.longitude;
+                     },(error)=> {
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            console.error("User denied the request for Geolocation.");
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            console.error("Location information is unavailable.");
+                            break;
+                        case error.TIMEOUT:
+                            console.error("The request to get user location timed out.");
+                            break;
+                        case error.UNKNOWN_ERROR:
+                            console.error("An unknown error occurred.");
+                            break;
+                    }
+                }
+            );
+        } else {
+            console.error("Sorry, Geolocation is not supported by this browser.");
         }
     },
     storageToState() {
@@ -278,7 +311,6 @@ let simToDo = {
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
     },
     trackSpeechButton(){
-
         let isPressed = false;
         let speechButton = document.getElementById('speechToTextSVG');
         let recognition = new this.permissions.speechRecognition;
@@ -846,6 +878,10 @@ let simToDo = {
             let foundIndexNoInDependencies = dependencies.findIndex(dependence => {
                return dependence.dependencyType==='todo' && dependence.uuid===dependencyObj.dependentData.uuid
             })
+            if(dependencyObj.dependentData.uuid===dependencyObj.targetUUID){
+                alert('A todo can not be a dependent of itself!');
+                return false;
+            }
             if(foundIndexNoInDependencies===-1){
                 dependencies.push(dependencyObj.dependentData);
                 this.saveTheState();

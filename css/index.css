@@ -221,7 +221,7 @@ input[type="range"] {
 
 .material-adding-form{
     position: absolute;
-    width: 300px;
+    width: 350px;
     height: 300px;
     border:1px solid red;
     background-color: lightyellow;
@@ -241,6 +241,8 @@ h5.material-list-header {
 
 .dependent-material{
     background-color: lightyellow;
+    display:flex;
+
 }
 
 .dependent-material:hover{
@@ -264,7 +266,12 @@ span.info{
     max-height: 170px;
     overflow-y: auto;
 }
-
+.material-action{
+    border:1px solid grey;
+    padding:0;
+    cursor:pointer;
+    margin-left: auto;
+}
 
 .svg-icon{
     width: 22px;

@@ -449,15 +449,21 @@ let simToDo = {
         console.log(toDoJob.rules);
         let toDoBox = this.createElm('div');
         toDoBox.id = toDoJob.theToDo.uuid;
-        let readableDateData = this.createReadableDate(theToDo.created);
+        let readableDateData = this.createReadableDate({mSeconds: theToDo.created, plusHourMinute: false});
         let dependencies = theToDo.dependencies.length?'Has dependencies':'No dependency';
-        let intendedDate = theToDo.intended ?? "Any time from now" ;
+        let intendedDate;
+        if(theToDo.intended){
+            intendedDate = this.createReadableDate({mSeconds:theToDo.intended, plusHourMinute:true});
+        }else{
+            intendedDate = "Any time from now";
+        }
+
         let doneStatus = `${theToDo.done.toString() === `true` ? " done" : "not yet"}`
 
         toDoBox.classList.add(conf.toDoBoxInListStyleClass);
         toDoBox.innerHTML += theToDo.body;
         toDoBox.innerHTML += '<br>UUID: ' + theToDo.uuid;
-        toDoBox.innerHTML += '<br>Intended: ' + intendedDate; //Date.parse()
+        toDoBox.innerHTML += '<br>Intended: ' + intendedDate;
         toDoBox.innerHTML += '<br>Dependencies: ' + dependencies;
         toDoBox.innerHTML += '<br>Created: ' + readableDateData;
         toDoBox.innerHTML += `<br>Is it done: ${doneStatus}`
@@ -584,7 +590,7 @@ let simToDo = {
         newDay.classList.add('day');
         //let toDay = new Date();
         let movedDate = this.moveDateBy(movementObj);
-        let readableDateOfThatDay = this.createReadableDate(movedDate);
+        let readableDateOfThatDay = this.createReadableDate({mSeconds: movedDate, plusHourMinute: false});
         newDay.innerHTML = readableDateOfThatDay;
         //console.log((new Date(`${movedDate}`)).toIsoString());
         newDay.id = `day-${readableDateOfThatDay.toString().replaceAll('.','')}`;
@@ -613,7 +619,7 @@ let simToDo = {
             timeLine.appendChild(newDay);
         }
         setTimeout(()=>{
-            let readableDateOfToday = this.createReadableDate(new Date().getTime());
+            let readableDateOfToday = this.createReadableDate({mSeconds: new Date().getTime(), plusHourMinute: false});
             let toDaysId = `day-${readableDateOfToday.toString().replaceAll('.','')}`;
             console.log(toDaysId);
             document.querySelector(`#${toDaysId}`).scrollIntoView({
@@ -771,9 +777,13 @@ let simToDo = {
 
         return paginationContainer
     },
-    createReadableDate(mSeconds) {
-        let theDate = new Date(mSeconds);
-        return ((theDate.getMonth()+1)).toString().padStart(2,"0") + '.' + (theDate.getDate()).toString().padStart(2,"0") + '.' + theDate.getUTCFullYear();
+    createReadableDate(dataObj={mSeconds:Number, plusHourMinute:false}) {
+        let theDate = new Date(dataObj.mSeconds);
+        let readableDate = ((theDate.getMonth()+1)).toString().padStart(2,"0") + '.' + (theDate.getDate()).toString().padStart(2,"0") + '.' + theDate.getUTCFullYear();
+        if(dataObj.plusHourMinute){
+            readableDate+=' '+ theDate.getHours() + ':' + theDate.getMinutes();
+        }
+        return readableDate;
     },
     createUID(dataObj={lookupTarget:[]}) {
         let uuid = self.crypto.randomUUID();
@@ -900,17 +910,10 @@ let simToDo = {
         document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"]({uuid:dataObj.uuid, dependentMaterials: this.giveDependentMaterialList({uuid:dataObj.uuid})});
         document.getElementById(`material-list-${dataObj.uuid}`).addEventListener('click',(event)=>{
             let srcElm = event.target;
-            if(event.target.classList.contains('dependent-material') || event.target.id.includes('material-for-') ){
-                let materialUUID ;
-                let srcElement;
-                if(event.target.id.includes('material-for-')){
-                    srcElement = event.target;
-                }else{
-                    srcElement = event.target.querySelector(`[id^="material-for-"]`);
-                    srcElement.checked = !srcElement.checked;
-                }
-                materialUUID = srcElement.id.replace('material-for-','');
-                this.checkMaterialObtained({todoUUID:dataObj.uuid, materialUUID:materialUUID, isObtained: srcElement.checked})
+            console.log(event.target);
+            if(srcElm.id.includes('material-for-')){
+                let materialUUID = srcElm.id.replace('material-for-','');
+                this.checkMaterialObtained({todoUUID:dataObj.uuid, materialUUID:materialUUID, isObtained: srcElm.checked})
             }
         })
     },
@@ -1012,7 +1015,7 @@ console.log(this);
             let listOfMaterials=''
             listOfMaterials+='<h5 class="material-list-header">List of Materials</h5>';
             dataObj.dependentMaterials.forEach(materialData=>{
-                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" ${materialData.isObtained?'checked':''} id="material-for-${materialData.uuid}">${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
+                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" ${materialData.isObtained?'checked':''} id="material-for-${materialData.uuid}">${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}<span class="material-action" title="Delete the material">🗑</span> <span class="material-action" title="Pass the material">🔜</span></div>`
             })
             return listOfMaterials;
         },

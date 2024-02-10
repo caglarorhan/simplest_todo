@@ -89,16 +89,29 @@ let simToDo = {
             { unitName: "Stick", shortHand: "stk" },
             { unitName: "Tray", shortHand: "tr" },
         ],
+    permissions:{
+        speechRecognition: null,
+    },
     filterParameters: {},
     init() {
         document.title=`${this.name} : ${this.version}`;
         this.storageToState();
+        this.getPermissions();
         this.autoSave();
         this.createAndLoadCSSFiles();
         this.createToDoElements();
         this.createTimeLine();
         this.drawToDos();
 
+    },
+    getPermissions(){
+        // asking permission for speech recognition
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            // Create an instance of SpeechRecognition
+            this.permissions.speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        } else {
+            console.log('Sorry, your browser does not support speech recognition.');
+        }
     },
     storageToState() {
         if (localStorage.getItem("activeState") && localStorage.getItem("activeState") !== 'null') {
@@ -265,19 +278,31 @@ let simToDo = {
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
     },
     trackSpeechButton(){
+
         let isPressed = false;
         let speechButton = document.getElementById('speechToTextSVG');
-        speechButton.addEventListener('mousedown',()=>{isPressed = true; this.trackSpeech(isPressed)});
-        speechButton.addEventListener('mouseup',()=>{isPressed = false;this.trackSpeech(isPressed)});
-        speechButton.addEventListener('mouseleave',()=>{isPressed = false;this.trackSpeech(isPressed)});
+        let recognition = new this.permissions.speechRecognition;
+        recognition.continuous = true;
+        recognition.lang = 'tr-TR';
+        recognition.onresult = (event)=> {
+            let transcript = event.results[0][0].transcript;
+            console.log(transcript);
+            document.getElementById(conf.toDoInputTextareaId).value= transcript;
+        };
 
-    },
-    trackSpeech(onAir){
-        if(onAir){
-            console.log('konusuluyor')
-        }else{
-            console.log('Susuldu')
-        }
+        speechButton.addEventListener('mousedown',()=>{
+            isPressed = true;
+            recognition.start();
+        });
+        speechButton.addEventListener('mouseup',()=>{
+            isPressed = false;
+            recognition.stop();
+        });
+        speechButton.addEventListener('mouseleave',()=>{
+            isPressed = false;
+            recognition.stop();
+        });
+
     },
     prepareNewToDoObject() {
         let toDoInputTextarea = document.getElementById(conf.toDoInputTextareaId);
@@ -838,13 +863,28 @@ let simToDo = {
         if(!dataObj.uuid) return false;
         document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"]({uuid:dataObj.uuid, dependentMaterials: this.giveDependentMaterialList({uuid:dataObj.uuid})});
         document.getElementById(`material-list-${dataObj.uuid}`).addEventListener('click',(event)=>{
+            let srcElm = event.target;
             if(event.target.classList.contains('dependent-material') || event.target.id.includes('material-for-') ){
-                alert('yes')
+                let materialUUID ;
+                let srcElement;
+                if(event.target.id.includes('material-for-')){
+                    srcElement = event.target;
+                }else{
+                    srcElement = event.target.querySelector(`[id^="material-for-"]`);
+                    srcElement.checked = !srcElement.checked;
+                }
+                materialUUID = srcElement.id.replace('material-for-','');
+                this.checkMaterialObtained({todoUUID:dataObj.uuid, materialUUID:materialUUID, isObtained: srcElement.checked})
             }
         })
     },
-    addMaterialToToDo(uuid){
-
+    checkMaterialObtained(dataObj={todoUUID:Number, materialUUID:Number, isObtained: Boolean}){
+        console.log(dataObj);
+        if(dataObj.todoUUID===0 || dataObj.materialUUID===0) return false;
+        console.log(dataObj.isObtained);
+        this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.todoUUID)[0].dependencies.filter(dependency=>dependency.uuid===dataObj.materialUUID)[0].isObtained = dataObj.isObtained;
+        this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.todoUUID)[0].dependencies.filter(dependency=>dependency.uuid===dataObj.materialUUID)[0].obtainedTime = new Date().getTime();
+        this.saveTheState();
     },
     removeMaterialAddingForm(){
         document.querySelector('[id^="material-add-"]')?.remove();
@@ -936,7 +976,7 @@ console.log(this);
             let listOfMaterials=''
             listOfMaterials+='<h5 class="material-list-header">List of Materials</h5>';
             dataObj.dependentMaterials.forEach(materialData=>{
-                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" id="material-for-${materialData.uuid}">${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
+                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" ${materialData.isObtained?'checked':''} id="material-for-${materialData.uuid}">${materialData.isObtained?'checked':''},${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
             })
             return listOfMaterials;
         },

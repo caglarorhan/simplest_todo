@@ -220,6 +220,7 @@ input[type="range"] {
 }
 
 .material-adding-form{
+    position: absolute;
     width: 300px;
     height: 300px;
     border:1px solid red;
@@ -233,6 +234,18 @@ input[type="range"] {
     border: 1px solid black;
     margin:1px;
     padding:2px;
+}
+h5.material-list-header {
+    margin: 2px;
+}
+
+.dependent-material{
+    background-color: lightyellow;
+}
+
+.dependent-material:hover{
+    cursor:pointer;
+    background-color: lightgreen;
 }
 
 .focused, .material-suggestions:hover{
@@ -251,3 +264,33 @@ span.info{
     max-height: 170px;
     overflow-y: auto;
 }
+
+
+.svg-icon{
+    width: 22px;
+    height: 22px;
+    vertical-align: middle;
+    fill: currentColor;
+    overflow: hidden;
+    cursor:pointer;
+    margin-bottom: -1px;
+    border:1px solid darkgray;
+    background-color: lightgray;
+    margin-left:4px;
+}
+.svg-icon:hover{
+    background:lightblue;
+    fill: yellow;
+    border: 1px solid gray;
+    border-radius: 2px;
+}
+
+.svg-icon:active{
+    background: red;
+    color:white;
+    border: 1px solid black;
+    border-radius: 2px;
+}
+
+
+

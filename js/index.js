@@ -11,6 +11,7 @@
 // TODO: Material type dependency adding
 // TODO: Visual representation of dependency relations
 // TODO: Remove dependency relations
+// TODO: Adding r auto creating tags for ToDos
 
 import conf from '../json/config.json' assert {type: 'json'};
 
@@ -38,7 +39,7 @@ let simToDo = {
         material:"material" // {dependencyType: "material", obtained: boolean}
     },
     materialTypes: [
-        { typeName: "Groceries", values: [{materialName:'Roman tomato', unit:'kg', amount:1},{materialName:'Beef tomato', unit:'kg', amount:1},{materialName:'Grape tomato', unit:'kg', amount:1}]},
+        { typeName: "Groceries", values: [{uuid:'', materialName:'Roman tomato', unit:'kg', amount:1},{uuid:'', materialName:'Beef tomato', unit:'kg', amount:1},{uuid:'', materialName:'Grape tomato', unit:'kg', amount:1}]},
         { typeName: "Household Supplies", values: [] },
         { typeName: "Personal Care", values: [] },
         { typeName: "Home Maintenance", values: [] },
@@ -123,6 +124,18 @@ let simToDo = {
         })
         return newElement;
     },
+    createSVGorPATH(dataObj = {givenId:'', qualifiedName:'', attributes:[{attributeName:'', value:''}]}) {
+        // {givenId:'', qualifiedName:'', attributes:[{attributeName:'', value:''}]}
+        let nameSpaceURI ='http://www.w3.org/2000/svg';
+        let newNSElement = document.createElementNS(nameSpaceURI, dataObj.qualifiedName);
+                newNSElement.id = dataObj.givenId;
+                if(dataObj.attributes.length > 0){
+                    dataObj.attributes.forEach(theAttributeObject=>{
+                        newNSElement.setAttribute(theAttributeObject.attributeName, theAttributeObject.value);
+                    })
+                }
+        return newNSElement;
+    },
     removeElm(id) {
         document.getElementById(id).remove();
     },
@@ -177,6 +190,39 @@ let simToDo = {
         toDoInputTextarea.id = conf.toDoInputTextareaId;
         toDoInputTextarea.classList.add(conf.todoInputTextareaStyleClass);
         let saveToDoButton = this.createElm('button');
+
+        let speechToTextSVG = this.createSVGorPATH({
+            givenId:'speechToTextSVG', qualifiedName:'svg', attributes:[
+                {attributeName:'aria-hidden', value:'true'},
+                {attributeName:'viewbox', value:'0 0 24 24'},
+                {attributeName:'width', value:'24px'},
+                {attributeName:'height', value:'24px'},
+                {attributeName:'class', value:'svg-icon'},
+            ]})
+        let path1 = this.createSVGorPATH({
+            givenId:'path1', qualifiedName:'path', attributes:[
+                {attributeName:'d', value:'M 10.273438 20.503906 L 4.453125 20.503906 L 4.453125 19.378906 L 9.144531 19.378906 L 9.144531 17.5625 L 6.976562 16.015625 C 6.78125 15.878906 6.664062 15.65625 6.664062 15.417969 C 6.660156 15.179688 6.773438 14.953125 6.960938 14.8125 L 9.144531 13.183594 L 9.144531 10.730469 L 10.890625 10.589844 L 7.121094 3.605469 L 8.113281 3.070312 L 12.707031 11.578125 L 10.273438 11.773438 L 10.273438 13.375 C 10.273438 13.609375 10.160156 13.832031 9.972656 13.972656 L 8.058594 15.402344 L 9.960938 16.757812 C 10.15625 16.898438 10.273438 17.125 10.273438 17.363281 Z M 4.066406 6.617188 C 4.066406 7.1875 4.53125 7.648438 5.097656 7.648438 C 5.667969 7.648438 6.128906 7.1875 6.128906 6.617188 C 6.128906 6.050781 5.667969 5.585938 5.097656 5.585938 C 4.53125 5.585938 4.066406 6.050781 4.066406 6.617188 Z M 13 17.136719 C 12.753906 17.136719 12.527344 16.972656 12.457031 16.722656 C 12.375 16.421875 12.550781 16.113281 12.851562 16.027344 C 13.136719 15.949219 13.335938 15.6875 13.335938 15.390625 C 13.335938 15.097656 13.148438 14.84375 12.867188 14.761719 C 12.570312 14.667969 12.402344 14.355469 12.492188 14.058594 C 12.582031 13.757812 12.898438 13.589844 13.195312 13.679688 C 13.953125 13.910156 14.460938 14.597656 14.460938 15.390625 C 14.460938 16.191406 13.925781 16.902344 13.152344 17.117188 C 13.101562 17.128906 13.050781 17.136719 13 17.136719 Z M 13 17.136719 '},
+                {attributeName:'fill', value:'none'},
+                {attributeName:'style', value:`stroke:none;fill-rule:nonzero;fill:rgb(0%,0%,0%);fill-opacity:1;`}
+            ]
+        })
+        let path2 = this.createSVGorPATH({
+            givenId:'path2', qualifiedName:'path', attributes:[
+                {attributeName:'style', value:`stroke:none;fill-rule:nonzero;fill:rgb(0%,0%,0%);fill-opacity:1;`},
+                {attributeName:'d', value:'M 14.664062 19.230469 C 14.460938 19.230469 14.265625 19.121094 14.164062 18.929688 C 14.019531 18.652344 14.125 18.3125 14.398438 18.167969 C 15.4375 17.621094 16.082031 16.554688 16.082031 15.382812 C 16.082031 14.230469 15.453125 13.171875 14.4375 12.621094 C 14.164062 12.472656 14.0625 12.128906 14.214844 11.855469 C 14.363281 11.582031 14.703125 11.480469 14.976562 11.628906 C 16.355469 12.378906 17.210938 13.816406 17.210938 15.382812 C 17.210938 16.976562 16.335938 18.425781 14.925781 19.167969 C 14.84375 19.207031 14.753906 19.230469 14.664062 19.230469 Z M 14.664062 19.230469 '}
+            ]
+        })
+        let path3 = this.createSVGorPATH({
+            givenId:'path2', qualifiedName:'path', attributes:[
+                {attributeName:'style', value:`stroke:none;fill-rule:nonzero;fill:rgb(0%,0%,0%);fill-opacity:1;`},
+                {attributeName:'d', value:'M 16.351562 20.929688 C 16.148438 20.929688 15.953125 20.820312 15.851562 20.628906 C 15.707031 20.351562 15.8125 20.011719 16.089844 19.867188 C 17.765625 18.988281 18.804688 17.265625 18.804688 15.378906 C 18.804688 13.515625 17.789062 11.808594 16.152344 10.921875 C 15.878906 10.773438 15.777344 10.429688 15.925781 10.15625 C 16.074219 9.882812 16.417969 9.78125 16.691406 9.929688 C 18.691406 11.015625 19.933594 13.105469 19.933594 15.378906 C 19.933594 17.6875 18.660156 19.789062 16.613281 20.867188 C 16.535156 20.90625 16.445312 20.929688 16.351562 20.929688 Z M 16.351562 20.929688 '}
+            ]
+        })
+
+        speechToTextSVG.appendChild(path1);
+        speechToTextSVG.appendChild(path2);
+        speechToTextSVG.appendChild(path3);
+
         //
         let toDoDependencyTree = this.createElm('div');
         toDoDependencyTree.id = conf.toDoDependencyTreeId;
@@ -214,7 +260,24 @@ let simToDo = {
         toDoInputContainer.appendChild(toDoDateTimeInputTitle);
         toDoInputContainer.appendChild(toDoDateTimeInput);
         toDoInputContainer.appendChild(saveToDoButton);
+        toDoInputContainer.appendChild(speechToTextSVG);
+        this.trackSpeechButton();
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
+    },
+    trackSpeechButton(){
+        let isPressed = false;
+        let speechButton = document.getElementById('speechToTextSVG');
+        speechButton.addEventListener('mousedown',()=>{isPressed = true; this.trackSpeech(isPressed)});
+        speechButton.addEventListener('mouseup',()=>{isPressed = false;this.trackSpeech(isPressed)});
+        speechButton.addEventListener('mouseleave',()=>{isPressed = false;this.trackSpeech(isPressed)});
+
+    },
+    trackSpeech(onAir){
+        if(onAir){
+            console.log('konusuluyor')
+        }else{
+            console.log('Susuldu')
+        }
     },
     prepareNewToDoObject() {
         let toDoInputTextarea = document.getElementById(conf.toDoInputTextareaId);
@@ -237,7 +300,7 @@ let simToDo = {
             return false;
         }
         let newToDoObject = {
-            uuid: this.createUID(),
+            uuid: this.createUID({lookupTarget:this.activeState.todos}),
             body: toDoInputTextarea.value,
             intended: (new Date(toDoDateTimeInput.value)).getTime(),
             created: Date.now(),
@@ -297,6 +360,7 @@ let simToDo = {
     getDependencyTree(targetToDoObject){
         let dependencyTree = document.getElementById(conf.toDoDependencyTreeId);
         dependencyTree.innerHTML='';
+        this.removeMaterialAddingForm();
         let theToDoBox = this.printToDo({theToDo:targetToDoObject, rules:{treeNodeMode:true, draggable:true, droppable:true}})
         dependencyTree.append(theToDoBox);
 
@@ -654,9 +718,9 @@ let simToDo = {
         let theDate = new Date(mSeconds);
         return ((theDate.getMonth()+1)).toString().padStart(2,"0") + '.' + (theDate.getDate()).toString().padStart(2,"0") + '.' + theDate.getUTCFullYear();
     },
-    createUID() {
+    createUID(dataObj={lookupTarget:[]}) {
         let uuid = self.crypto.randomUUID();
-        while (this.activeState.todos.filter(todo => todo.uuid === uuid).length > 0) {
+        while (dataObj.lookupTarget.filter(todo => todo.uuid === uuid).length > 0) {
             uuid = self.crypto.randomUUID();
         }
         return uuid;
@@ -772,7 +836,18 @@ let simToDo = {
     refreshMaterialList(dataObj={uuid:null}){
         console.log('DATa OBJ: ',dataObj.uuid);
         if(!dataObj.uuid) return false;
-        document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"](this.giveDependentMaterialList({uuid:dataObj.uuid}));
+        document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"]({uuid:dataObj.uuid, dependentMaterials: this.giveDependentMaterialList({uuid:dataObj.uuid})});
+        document.getElementById(`material-list-${dataObj.uuid}`).addEventListener('click',(event)=>{
+            if(event.target.classList.contains('dependent-material') || event.target.id.includes('material-for-') ){
+                alert('yes')
+            }
+        })
+    },
+    addMaterialToToDo(uuid){
+
+    },
+    removeMaterialAddingForm(){
+        document.querySelector('[id^="material-add-"]')?.remove();
     },
     createMaterialAddingForm(event,uuid){
         let triggerButton = event.target;
@@ -780,7 +855,6 @@ let simToDo = {
         let materialFormDiv = this.createElm('div');
         materialFormDiv.id =`material-add-${uuid}`;
         materialFormDiv.classList.add('material-adding-form');
-        materialFormDiv.style.position = 'absolute';
         materialFormDiv.style.left = coords.left + 'px';
         materialFormDiv.style.top = coords.top + 'px';
 console.log(this);
@@ -793,7 +867,7 @@ console.log(this);
         document.querySelector(`#material-type-${uuid}`).selectedIndex =0;
 
         document.getElementById(`close-button-${uuid}`).addEventListener('click',()=>{
-            document.getElementById(`material-add-${uuid}`).remove();
+            this.removeMaterialAddingForm();
         })
         document.getElementById(`material-type-${uuid}`).addEventListener('change',()=>{
 
@@ -802,9 +876,12 @@ console.log(this);
                 // TODO: Tum material verisi todo nun dependencies kismina kaydolacak.
             let materialType = document.getElementById(`material-type-${uuid}`).value;
             let materialName = document.getElementById(`material-search-${uuid}`).value;
-            let materialAmount = document.getElementById(`material-amount-${uuid}`).value
-            let materialUnit = document.getElementById(`material-unit-${uuid}`).value
-            let newMaterial = {dependencyType:"material", materialType:materialType, materialName:materialName, unit:materialUnit, amount:materialAmount, addTime: new Date().getTime(), obtainedTime: null, isObtained: false}
+            let materialAmount = document.getElementById(`material-amount-${uuid}`).value;
+            let materialUnit = document.getElementById(`material-unit-${uuid}`).value;
+            let newMaterialUUID = this.createUID({
+                lookupTarget:this.activeState.todos.filter(theToDo=>theToDo.uuid===uuid)[0].dependencies.filter(dp=>dp.dependencyType==='material')
+            })
+            let newMaterial = {uuid:newMaterialUUID, dependencyType:"material", materialType:materialType, materialName:materialName, unit:materialUnit, amount:materialAmount, addTime: new Date().getTime(), obtainedTime: null, isObtained: false}
             // Bu materialType daha onceden kayitli mi
             let filteredByType = this.materialTypes.filter(eachType=>{
                 return eachType.typeName===materialType;
@@ -826,10 +903,12 @@ console.log(this);
             this.refreshMaterialList({uuid:uuid});
 
             function resetMaterialForm(){
+                console.log('resetMaterialForm calisti');
                 document.getElementById(`material-type-${uuid}`).selectedIndex = 0;
-                materialName = '';
-                materialAmount = '';
+                document.getElementById(`material-search-${uuid}`).value='';
+                document.getElementById(`material-amount-${uuid}`).value='';
                 document.getElementById(`material-unit-${uuid}`).selectedIndex=0;
+                document.getElementById(`material-search-${uuid}`).focus();
             }
         })
 
@@ -852,12 +931,12 @@ console.log(this);
         return theDependencies.filter(dependency=>dependency.dependencyType==="material");
     },
     getTemplate:{
-        "material-in-list":(dataObj)=>{
+        "material-in-list":(dataObj={uuid:null, dependentMaterials:[]})=>{
             console.log(dataObj);
             let listOfMaterials=''
-            listOfMaterials+='<h5>List of Materials</h5>';
-            dataObj.forEach(materialData=>{
-                listOfMaterials+=`<div>${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
+            listOfMaterials+='<h5 class="material-list-header">List of Materials</h5>';
+            dataObj.dependentMaterials.forEach(materialData=>{
+                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" id="material-for-${materialData.uuid}">${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
             })
             return listOfMaterials;
         },
@@ -875,7 +954,7 @@ console.log(this);
                         Material: <input type="search" id="material-search-${dataObj.uuid}"> 
                         </div>
                         <div style="display:flex; flex-direction: row; justify-content: space-between;">
-                            <div style="flex-grow: 1">Amount:<input id="material-amount-${dataObj.uuid}" type="number" step="0.1" min="0" width="30px"></div>
+                            <div style="flex-grow: 1;">Amount:<input style="width:130px;" id="material-amount-${dataObj.uuid}" type="number" step="0.1" min="0" width="30px"></div>
                             <div style="flex-grow: 1"><select id="material-unit-${dataObj.uuid}">${materialUnits}</select></div>
                         </div>
                         <div>

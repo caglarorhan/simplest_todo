@@ -976,7 +976,7 @@ console.log(this);
             let listOfMaterials=''
             listOfMaterials+='<h5 class="material-list-header">List of Materials</h5>';
             dataObj.dependentMaterials.forEach(materialData=>{
-                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" ${materialData.isObtained?'checked':''} id="material-for-${materialData.uuid}">${materialData.isObtained?'checked':''},${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
+                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" ${materialData.isObtained?'checked':''} id="material-for-${materialData.uuid}">${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}</div>`
             })
             return listOfMaterials;
         },

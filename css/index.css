@@ -242,6 +242,10 @@ h5.material-list-header {
 .dependent-material{
     background-color: lightyellow;
     display:flex;
+}
+.obtained-material{
+    background-color: darkblue;
+    color:white;
 
 }
 
@@ -271,6 +275,10 @@ span.info{
     padding:0;
     cursor:pointer;
     margin-left: auto;
+}
+
+.passed{
+    text-decoration: line-through;
 }
 
 .svg-icon{

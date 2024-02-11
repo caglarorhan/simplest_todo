@@ -78,7 +78,7 @@ let conf = {
 };
 let simToDo = {
     name: 'SimplestToDo',
-    version: "2024.0.2",
+    version: "2024.0.3",
     autoSaveTime: conf.autoSaveTime,
     minInputLength: conf.minInputLength,
     timeLineDayLengthBack: 15,
@@ -155,7 +155,7 @@ let simToDo = {
         position:{}
     },
     filterParameters: {},
-    async init() {
+    init() {
         document.title=`${this.name} : ${this.version}`;
         this.storageToState();
         this.getPermissions();
@@ -176,31 +176,31 @@ let simToDo = {
         }
 
         //asking for geolocation
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition((position)=> {
-                   this.position = position;
-                    //var latitude = position.coords.latitude;
-                    //var longitude = position.coords.longitude;
-                     },(error)=> {
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            console.error("User denied the request for Geolocation.");
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            console.error("Location information is unavailable.");
-                            break;
-                        case error.TIMEOUT:
-                            console.error("The request to get user location timed out.");
-                            break;
-                        case error.UNKNOWN_ERROR:
-                            console.error("An unknown error occurred.");
-                            break;
-                    }
-                }
-            );
-        } else {
-            console.error("Sorry, Geolocation is not supported by this browser.");
-        }
+        // if ("geolocation" in navigator) {
+        //     navigator.geolocation.getCurrentPosition((position)=> {
+        //            this.position = position;
+        //             //var latitude = position.coords.latitude;
+        //             //var longitude = position.coords.longitude;
+        //              },(error)=> {
+        //             switch(error.code) {
+        //                 case error.PERMISSION_DENIED:
+        //                     console.error("User denied the request for Geolocation.");
+        //                     break;
+        //                 case error.POSITION_UNAVAILABLE:
+        //                     console.error("Location information is unavailable.");
+        //                     break;
+        //                 case error.TIMEOUT:
+        //                     console.error("The request to get user location timed out.");
+        //                     break;
+        //                 case error.UNKNOWN_ERROR:
+        //                     console.error("An unknown error occurred.");
+        //                     break;
+        //             }
+        //         }
+        //     );
+        // } else {
+        //     console.error("Sorry, Geolocation is not supported by this browser.");
+        // }
     },
     storageToState() {
         if (localStorage.getItem("activeState") && localStorage.getItem("activeState") !== 'null') {
@@ -369,7 +369,7 @@ let simToDo = {
     trackSpeechButton(){
         let isPressed = false;
         let speechButton = document.getElementById('speechToTextSVG');
-        let recognition = new this.permissions.speechRecognition;
+        let recognition = new this.permissions.speechRecognition();
         recognition.continuous = true;
         recognition.lang = 'tr-TR';
         recognition.onresult = (event)=> {
@@ -501,8 +501,8 @@ let simToDo = {
 
          */
         let theToDo = toDoJob.theToDo;
-        console.log(toDoJob);
-        console.log(toDoJob.rules);
+        //console.log(toDoJob);
+        //console.log(toDoJob.rules);
         let toDoBox = this.createElm('div');
         toDoBox.id = toDoJob.theToDo.uuid;
         let readableDateData = this.createReadableDate({mSeconds: theToDo.created, plusHourMinute: false});
@@ -677,7 +677,7 @@ let simToDo = {
         setTimeout(()=>{
             let readableDateOfToday = this.createReadableDate({mSeconds: new Date().getTime(), plusHourMinute: false});
             let toDaysId = `day-${readableDateOfToday.toString().replaceAll('.','')}`;
-            console.log(toDaysId);
+            //console.log(toDaysId);
             document.querySelector(`#${toDaysId}`).scrollIntoView({
                 behavior: "smooth", // Optional: for smooth scrolling animation
                 block: "nearest",    // Scroll to center horizontally
@@ -705,7 +705,7 @@ let simToDo = {
         },{passive:false})
     },
     filterTheList(filterJob={filterParams:{}, theList:[]}){
-        console.log('Listedeki gun sayisi:',filterJob.theList);
+        // console.log('Listedeki gun sayisi:',filterJob.theList);
         let resultList=[];
         let filterParams = filterJob.filterParams;
         if (Object.keys(filterJob.filterParams).length && filterJob.theList.length) {
@@ -714,11 +714,11 @@ let simToDo = {
                 let result = true;
                 Object.keys(filterParams).forEach(paramKey => {
                         if(paramKey==="dayId" && item.intended){
-                            console.log(`item: `,item)
+                            //console.log(`item: `,item)
                             let slicedDate = new Date(item.intended).toISOString().split('T')[0].split('-');
                             let targetDayDivId = `day-${slicedDate[1].toString()}${slicedDate[2].toString()}${slicedDate[0].toString()}`;
                             if(filterParams.dayId===targetDayDivId){
-                                console.log(filterParams.dayId," | ",targetDayDivId)
+                                //console.log(filterParams.dayId," | ",targetDayDivId)
                                 result = result && true;
                             }else{
                                 result = false;
@@ -960,26 +960,59 @@ let simToDo = {
         }
 
     },
-    refreshMaterialList(dataObj={uuid:null}){
+    refreshMaterialList(dataObj={uuid:String}){
         console.log('DATa OBJ: ',dataObj.uuid);
         if(!dataObj.uuid) return false;
+
         document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"]({uuid:dataObj.uuid, dependentMaterials: this.giveDependentMaterialList({uuid:dataObj.uuid})});
+
         document.getElementById(`material-list-${dataObj.uuid}`).addEventListener('click',(event)=>{
             let srcElm = event.target;
-            console.log(event.target);
             if(srcElm.id.includes('material-for-')){
                 let materialUUID = srcElm.id.replace('material-for-','');
                 this.checkMaterialObtained({todoUUID:dataObj.uuid, materialUUID:materialUUID, isObtained: srcElm.checked})
             }
         })
+
+        document.querySelectorAll('.material-action.pass').forEach(materialPass=>{
+            materialPass.addEventListener('click',(event)=>{
+                let materialUUID = event.target.parentNode.dataset.materialUuid;
+                console.log(materialUUID);
+                this.materialDeleteOrPass({type:'pass',toDoUUID:dataObj.uuid, materialUUID:materialUUID})
+            })
+        })
+        document.querySelectorAll('.material-action.delete').forEach(materialDelete=>{
+            materialDelete.addEventListener('click',(event)=>{
+                let materialUUID = event.target.parentNode.dataset.materialUuid;
+                console.log(materialUUID);
+                this.materialDeleteOrPass({type: 'delete', toDoUUID: dataObj.uuid, materialUUID: materialUUID})
+            })
+        })
+    },
+    materialDeleteOrPass(dataObj={type:String,toDoUUID:String, materialUUID:String}){
+        if(!dataObj.type || !dataObj.toDoUUID || !dataObj.materialUUID) return false;
+        switch(dataObj.type){
+            case "pass":
+                let passValue = this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0].dependencies.filter(dependency=>dependency.uuid===dataObj.materialUUID)[0]?.pass;
+                this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0].dependencies.filter(dependency=>dependency.uuid===dataObj.materialUUID)[0].pass=!passValue;
+                break;
+            case "delete":
+                if(!confirm('Do you want to delete this material?')) return false;
+                let targetDependencyIndex = this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0].dependencies.findIndex(dependency=>dependency.uuid===dataObj.materialUUID);
+                this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0].dependencies.splice(targetDependencyIndex,1);
+                break;
+        }
+        this.saveTheState();
+        this.refreshMaterialList({uuid: dataObj.toDoUUID})
     },
     checkMaterialObtained(dataObj={todoUUID:Number, materialUUID:Number, isObtained: Boolean}){
-        console.log(dataObj);
+        //console.log(dataObj);
         if(dataObj.todoUUID===0 || dataObj.materialUUID===0) return false;
         console.log(dataObj.isObtained);
         this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.todoUUID)[0].dependencies.filter(dependency=>dependency.uuid===dataObj.materialUUID)[0].isObtained = dataObj.isObtained;
         this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.todoUUID)[0].dependencies.filter(dependency=>dependency.uuid===dataObj.materialUUID)[0].obtainedTime = new Date().getTime();
         this.saveTheState();
+        this.refreshMaterialList({uuid:dataObj.todoUUID});
     },
     removeMaterialAddingForm(){
         document.querySelector('[id^="material-add-"]')?.remove();
@@ -1071,7 +1104,7 @@ console.log(this);
             let listOfMaterials=''
             listOfMaterials+='<h5 class="material-list-header">List of Materials</h5>';
             dataObj.dependentMaterials.forEach(materialData=>{
-                listOfMaterials+=`<div class="dependent-material"><input type="checkbox" ${materialData.isObtained?'checked':''} id="material-for-${materialData.uuid}">${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}<span class="material-action" title="Delete the material">🗑</span> <span class="material-action" title="Pass the material">🔜</span></div>`
+                listOfMaterials+=`<div class="dependent-material ${materialData.isObtained?'obtained-material':''} ${materialData.pass?'passed':''}" data-material-uuid="${materialData.uuid}"><input type="checkbox" ${materialData.isObtained?'checked':''} id="material-for-${materialData.uuid}">${materialData.materialType} : ${materialData.materialName}, ${materialData.amount},  ${materialData.unit}<span class="material-action delete" title="Delete the material">🗑</span> <span class="material-action pass" title="Pass the material">🔜</span></div>`
             })
             return listOfMaterials;
         },
@@ -1179,7 +1212,9 @@ console.log(this);
             })
         }
 
-    }
+    },
+
+
 };
 
 window.addEventListener('DOMContentLoaded', () => {

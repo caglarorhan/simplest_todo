@@ -1114,7 +1114,7 @@ console.log(this);
 
             return `
                     <div>
-                        <div><span class="info" title="TODO: ${dataObj.uuid}">ⓘ</span><button id="close-button-${dataObj.uuid}" style="cursor:pointer; position: absolute; top:2px; right:2px; border-radius: 5px;" title="Close material adding form">X</button></div>
+                        <div><button class="connectionButton cB_leftTop" id="close-button-${dataObj.uuid}" title="TODO: ${dataObj.uuid}">X</button></div>
                         <div>
                         Material Type:<select id="material-type-${dataObj.uuid}">${materialTypeOptions}</select>
                         </div>

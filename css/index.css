@@ -208,6 +208,18 @@ input[type="range"] {
     margin-left: auto;
     margin-top: 29px;
 }
+.cB_leftTop{
+    position: relative !important;
+    margin-right:auto;
+    margin-top: 0;
+    margin-left: -161px;
+    background-color: black;
+    border-color: red;
+    font-weight: bold;
+}
+.cB_leftTop:hover{
+    border-color: red;
+}
 
 .dropZone{
     border: 1px dashed red;

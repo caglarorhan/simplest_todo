@@ -18,8 +18,64 @@
 // TODO: Manage all functions with audio directions
 // TODO: Challenging and gamification adding
 
-import conf from '../json/config.json' assert {type: 'json'};
-
+//import conf from '../json/config.json' assert {type: 'json'};
+let conf = {
+    "defaultLang": "en",
+    "defaultStyleFile": "./css/index.css",
+    "alternateStyleFile": "simToDo_alternate.css",
+    "autoSaveTime": 10,
+    "minInputLength": 3,
+    "itemPerPage": 5,
+    "maxPagingButton": 10,
+    "textLabels": {
+        "tr": {
+            "saveButton": "TODO kaydet",
+            "headerText": "Simplest TODO Uygulamasi",
+            "searchTitle": "TODO Ara: ",
+            "searchPlaceHolder": "Anahtar kelime girin",
+            "totalEntriesTitle": "TOPLAM TODO SAYISI:",
+            "intendedDateTitle": "Hedef Tarih"
+        },
+        "en": {
+            "saveButton": "Save TODO",
+            "headerText": "Simplest TODO Application",
+            "searchTitle": "Search ToDo: ",
+            "searchPlaceHolder": "Search for a keyword",
+            "totalEntriesTitle": "TOTAL ENTRIES:",
+            "intendedDateTitle": "Intended Date"
+        }
+    },
+    "mainContainerId": "mainToDoContainer",
+    "mainContainerStyleClass": "mainToDoContainer",
+    "toDoInputContainerId": "toDoInputContainer",
+    "todoInputContainerStyleClass": "toDoInputContainer",
+    "toDoInputTextareaId": "toDoInputTextarea",
+    "todoInputTextareaStyleClass": "toDoInputTextarea",
+    "toDoDateTimeInputId": "toDoDateTimeInput",
+    "toDoDateTimeInputStyleClass": "toDoDateTimeInput",
+    "toDoListContainerId": "toDoListContainer",
+    "toDoListContainerStyleClass": "toDoListContainer",
+    "toDoBoxInListStyleClass": "toDoBoxInList",
+    "toDoFilterContainerId": "toDoFilterContainer",
+    "toDoFilterContainerStyleClass": "toDoFilterContainer",
+    "toDoSearchContainerId": "toDoSearchContainer",
+    "toDoSearchContainerStyleClass": "toDoSearchContainer",
+    "toDoDependencyTreeId": "toDoDependencyTree",
+    "toDoDependencyTreeStyleClass": "toDoDependencyTree",
+    "toDoTimeLineContainerId": "toDoTimeLineContainer",
+    "toDoTimeLineContainerStyleClass": "toDoTimeLineContainer",
+    "ui_container_structure": {
+        "isTargetIntegrated": false,
+        "ui_structure": {
+            "toDoInputContainer": "newToDoFromHere",
+            "toDoFilterContainer": "filtersHere",
+            "toDoSearchContainer": "searchHere",
+            "toDoDependencyTree": "seeDependenciesHere",
+            "toDoListContainer": "toDoListHere",
+            "toDoTimeLineContainer": "toDoTimeLineHere"
+        }
+    }
+};
 let simToDo = {
     name: 'SimplestToDo',
     version: "2024.0.2",
@@ -99,7 +155,7 @@ let simToDo = {
         position:{}
     },
     filterParameters: {},
-    init() {
+    async init() {
         document.title=`${this.name} : ${this.version}`;
         this.storageToState();
         this.getPermissions();

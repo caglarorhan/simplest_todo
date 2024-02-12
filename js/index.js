@@ -1121,15 +1121,15 @@ console.log(this);
             givenId:'lineCarrier', qualifiedName:'svg', attributes:[
                 {attributeName:'viewBox', value: `0 0 ${targetDrawAreaDimensions.width} ${targetDrawAreaDimensions.height}`},
                 {attributeName:'top', value: 0},
-                {attributeName:'left', value: 0}
+                {attributeName:'left', value: targetDrawAreaDimensions.left}
             ]})
 
         let line = this.createSVGorPATH({
             givenId: 'line_1',
             qualifiedName: 'line',
             attributes: [
-                {attributeName:"x1", value: cb_BottomDimensions.left},
-                {attributeName:"y1", value: cb_BottomDimensions.top},
+                {attributeName:"x1", value: 1150},
+                {attributeName:"y1", value: 400},
                 {attributeName:"x2", value: 100},
                 {attributeName:"y2", value: 100},
                 {attributeName:"stroke", value: 'black'},

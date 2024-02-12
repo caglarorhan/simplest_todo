@@ -226,13 +226,15 @@ let simToDo = {
         })
         return newElement;
     },
-    createSVGorPATH(dataObj = {givenId:'', qualifiedName:'', attributes:[{attributeName:'', value:''}]}) {
+    createSVGorPATH(dataObj = {givenId:String, qualifiedName:String, attributes:[{attributeName:'', value:''}]}) {
         // {givenId:'', qualifiedName:'', attributes:[{attributeName:'', value:''}]}
+        console.log(dataObj);
         let nameSpaceURI ='http://www.w3.org/2000/svg';
         let newNSElement = document.createElementNS(nameSpaceURI, dataObj.qualifiedName);
                 newNSElement.id = dataObj.givenId;
                 if(dataObj.attributes.length > 0){
                     dataObj.attributes.forEach(theAttributeObject=>{
+                        console.log(theAttributeObject);
                         newNSElement.setAttribute(theAttributeObject.attributeName, theAttributeObject.value);
                     })
                 }
@@ -465,7 +467,7 @@ let simToDo = {
         for (let j = firstItemIndex; j <= lastItemIndex; j++) {
             let newToDoBox = this.printToDo({theToDo:sortedToDoList[j], rules:{update:true, dependencyButton:true, draggable:true}});
             //console.log(newToDoBox);
-            toDoListContainer.appendChild(newToDoBox);
+            toDoListContainer.appendChild(newToDoBox.theBox);
         }
         let pagingButtonElements = this.createPagination({currentPageNo: pageNo, toDoCount: sortedToDoListLength})
         toDoListContainer.insertAdjacentElement('afterbegin', pagingButtonElements);
@@ -474,8 +476,10 @@ let simToDo = {
         let dependencyTree = document.getElementById(conf.toDoDependencyTreeId);
         dependencyTree.innerHTML='';
         this.removeMaterialAddingForm();
-        let theToDoBox = this.printToDo({theToDo:targetToDoObject, rules:{treeNodeMode:true, draggable:true, droppable:true}})
-        dependencyTree.append(theToDoBox);
+        let theToDoBox = this.printToDo({theToDo:targetToDoObject, rules:{treeNodeMode:true, draggable:true, droppable:true}});
+
+        dependencyTree.append(theToDoBox.theBox);
+        theToDoBox.callbacks.forEach(callback=>callback());
 
     },
     getCoordinationData(element){
@@ -500,6 +504,7 @@ let simToDo = {
         }
 
          */
+        let callbacks=[];
         let theToDo = toDoJob.theToDo;
         //console.log(toDoJob);
         //console.log(toDoJob.rules);
@@ -562,39 +567,24 @@ let simToDo = {
             let bottomButton = this.createElm('button');
             bottomButton.id = `button-bottom-${toDoJob.theToDo.uuid}`;
             bottomButton.classList.add('connectionButton','cB_bottom');
-            bottomButton.title = 'No dependencies here!'
             toDoBox.insertAdjacentElement('beforeend',bottomButton);
-            let todoDependencies = toDoJob.theToDo.dependencies.filter(dependency=>dependency.dependencyType==='todo');
-            if(todoDependencies.length) {
-                bottomButton.classList.add('hasDependencies');
-                bottomButton.textContent = todoDependencies.length;
-                bottomButton.title = `To see ${todoDependencies.length} dependencies click here!`
-            }else{
-                bottomButton.textContent=0;
-            }
+            callbacks.push(()=>{this.findDependencyCount({type: 'todo', toDoUUID:toDoJob.theToDo.uuid, targetId:bottomButton.id, titleTemplate:'dependency-todo-count'})});
+            bottomButton.addEventListener('click',()=>{
+                this.drawDependencyTree({toDoUUID:toDoJob.theToDo.uuid})
+            })
 
             let rightBottomButton = this.createElm('button');
             rightBottomButton.id = `button-rightbottom-${toDoJob.theToDo.uuid}`;
             rightBottomButton.classList.add('connectionButton','cB_rightBottom');
             toDoBox.insertAdjacentElement('beforeend',rightBottomButton);
-            let materialDependencies = toDoJob.theToDo.dependencies.filter(dependency => dependency.dependencyType==='material');
-            rightBottomButton.title = 'Add material dependency to this todo!';
-            if(materialDependencies.length){
-                rightBottomButton.classList.add('hasDependencies');
-                rightBottomButton.textContent = materialDependencies.length;
-            }else{
-                rightBottomButton.textContent=0;
-
-            }
+            callbacks.push(()=>{this.findDependencyCount({type: 'material', toDoUUID:toDoJob.theToDo.uuid, targetId:rightBottomButton.id, titleTemplate:'dependency-material-count'})});
             rightBottomButton.addEventListener('click', (event)=>{
                 this.createMaterialAddingForm(event,toDoJob.theToDo.uuid)
             })
-
-
-
-
-            if(toDoJob.theToDo.dependencies.length){
-                console.log(this.activeState.todos)
+            if(toDoJob.rules.droppable){
+                toDoBox.droppable = true;
+                toDoBox.addEventListener('drop', this.dropHandler.bind(this));
+                toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
             }
         }
 
@@ -609,14 +599,31 @@ let simToDo = {
             // toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
             //toDoBox.addEventListener('drag', this.dragHandler.bind(this));
         }
-        if(toDoJob.rules.droppable){
-            toDoBox.droppable = true;
-            toDoBox.addEventListener('drop', this.dropHandler.bind(this));
-            toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
+        // if(toDoJob.rules.droppable){
+        //     toDoBox.droppable = true;
+        //     toDoBox.addEventListener('drop', this.dropHandler.bind(this));
+        //     toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
+        // }
+
+
+        return {theBox: toDoBox, callbacks:callbacks};
+    },
+    findDependencyCount(dataObj={type:String, toDoUUID:String, targetId:String, titleTemplate:String}){
+        // type would be 'todo', 'material'
+        console.log(dataObj)
+        let theCount=0;
+        theCount = this.activeState.todos.find(theToDo=>theToDo.uuid===dataObj.toDoUUID).dependencies.filter(dependency=>dependency.dependencyType===dataObj.type).length;
+
+        if(document.getElementById(`${dataObj.targetId}`)){
+            console.log('Target var')
+            let targetElement = document.getElementById(dataObj.targetId);
+            targetElement.textContent= theCount.toString();
+            if(!targetElement.classList.contains('hasDependencies')){
+                targetElement.classList.add('hasDependencies');
+            }
+            targetElement.title = this.getTemplate[dataObj.titleTemplate]({count:theCount})
         }
-
-
-        return toDoBox;
+        return theCount;
     },
     updateToDo(command = {uuid: '', job: 'show', data: {}}) {
         if (!command.uuid) {
@@ -917,7 +924,7 @@ let simToDo = {
     dropHandler(ev){
         ev.preventDefault();
         let target = ev.target;
-        console.log(`${target.id} nesnesi drop oldu. drop tetiklendi`);
+        console.log(`${target.id} nesnesine birsey drop oldu. drop tetiklendi`);
         let transferredData = ev.dataTransfer.getData("application/json");
         transferredData = JSON.parse(transferredData);
         let dependencyObj ={targetUUID:target.id.toString(), dependentData:transferredData};
@@ -988,6 +995,7 @@ let simToDo = {
                 this.materialDeleteOrPass({type: 'delete', toDoUUID: dataObj.uuid, materialUUID: materialUUID})
             })
         })
+        this.findDependencyCount({type:'material', toDoUUID: dataObj.uuid, targetId:`button-rightbottom-${dataObj.uuid}`, titleTemplate:'dependency-material-count'})
     },
     materialDeleteOrPass(dataObj={type:String,toDoUUID:String, materialUUID:String}){
         if(!dataObj.type || !dataObj.toDoUUID || !dataObj.materialUUID) return false;
@@ -1098,7 +1106,54 @@ console.log(this);
         let theDependencies = theToDo.dependencies;
         return theDependencies.filter(dependency=>dependency.dependencyType==="material");
     },
+    drawDependencyTree(dataObj={toDoUUID:String}){
+        let targetDrawArea = document.getElementById(conf.toDoDependencyTreeId);
+        // Once SVG olusturup sonra line i icine append edecegiz. SVG yi targetDrawArea ya append edecegiz
+        console.log('drawDependencyTree cagirildi.');
+        let targetDrawAreaDimensions = this.getCoordinationData(targetDrawArea);
+        console.log(`#button-bottom-${dataObj.toDoUUID}`)
+        let cb_Bottom = document.getElementById(`button-bottom-${dataObj.toDoUUID}`);
+        console.log(cb_Bottom);
+        let cb_BottomDimensions = this.getCoordinationData(cb_Bottom);
+
+// *************************************** Coordinate hesaplari hatali veya goreceli cikiyor :(
+        let lineCarrier = this.createSVGorPATH({
+            givenId:'lineCarrier', qualifiedName:'svg', attributes:[
+                {attributeName:'viewBox', value: `0 0 ${targetDrawAreaDimensions.width} ${targetDrawAreaDimensions.height}`},
+                {attributeName:'top', value: 0},
+                {attributeName:'left', value: 0}
+            ]})
+
+        let line = this.createSVGorPATH({
+            givenId: 'line_1',
+            qualifiedName: 'line',
+            attributes: [
+                {attributeName:"x1", value: cb_BottomDimensions.left},
+                {attributeName:"y1", value: cb_BottomDimensions.top},
+                {attributeName:"x2", value: 100},
+                {attributeName:"y2", value: 100},
+                {attributeName:"stroke", value: 'black'},
+            ]
+        })
+        lineCarrier.appendChild(line);
+        targetDrawArea.insertAdjacentElement('beforeend',lineCarrier);
+
+    },
     getTemplate:{
+        "dependency-material-count":(dataObj={count:0})=>{
+            if(dataObj.count===0){
+                return 'Add material dependency to this todo!'
+            }else{
+                return `${dataObj.count} added, click to add more!`;
+            }
+},
+        "dependency-todo-count":(dataObj={count:0})=>{
+            if(dataObj.count===0){
+                return 'Add todo dependency to this todo by dragging from left!'
+            }else{
+                return `To see ${dataObj.count} dependencies click here!`;
+            }
+},
         "material-in-list":(dataObj={uuid:null, dependentMaterials:[]})=>{
             console.log(dataObj);
             let listOfMaterials=''

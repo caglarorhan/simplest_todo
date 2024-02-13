@@ -1026,6 +1026,7 @@ let simToDo = {
         document.querySelector('[id^="material-add-"]')?.remove();
     },
     createMaterialAddingForm(event,uuid){
+        if(document.getElementById(`material-add-${uuid}`)) return false;
         let triggerButton = event.target;
         let coords = this.getCoordinationData(triggerButton);
         let materialFormDiv = this.createElm('div');
@@ -1108,36 +1109,48 @@ console.log(this);
     },
     drawDependencyTree(dataObj={toDoUUID:String}){
         let targetDrawArea = document.getElementById(conf.toDoDependencyTreeId);
-        // Once SVG olusturup sonra line i icine append edecegiz. SVG yi targetDrawArea ya append edecegiz
-        console.log('drawDependencyTree cagirildi.');
         let targetDrawAreaDimensions = this.getCoordinationData(targetDrawArea);
-        console.log(`#button-bottom-${dataObj.toDoUUID}`)
         let cb_Bottom = document.getElementById(`button-bottom-${dataObj.toDoUUID}`);
-        console.log(cb_Bottom);
         let cb_BottomDimensions = this.getCoordinationData(cb_Bottom);
-
-// *************************************** Coordinate hesaplari hatali veya goreceli cikiyor :(
         let lineCarrier = this.createSVGorPATH({
             givenId:'lineCarrier', qualifiedName:'svg', attributes:[
                 {attributeName:'viewBox', value: `0 0 ${targetDrawAreaDimensions.width} ${targetDrawAreaDimensions.height}`},
                 {attributeName:'top', value: 0},
                 {attributeName:'left', value: targetDrawAreaDimensions.left}
             ]})
+        // TODO: bu todo nun dependcyleri icindeki type:todo olanlari kutucuk olarak asagiya koyup cizgilerle baglayacagiz.
+        let dependencyToDos = this.giveTheseDependenciesOfToDo({toDoUUID:dataObj.toDoUUID, dependencyType:'todo'});
 
+
+
+
+        this.drawLine({
+            from:{
+                x:cb_BottomDimensions.left - targetDrawAreaDimensions.left+10,
+                y:cb_BottomDimensions.top - targetDrawAreaDimensions.top+10},
+            to:{
+                x:100,
+                y:100},
+            strikeColor:'black',
+            lineCarrier: lineCarrier,
+            targetDrawArea: targetDrawArea
+        })
+
+    },
+    drawLine(dataObj={from:{x:Number, y:Number}, to:{x:Number, y:Number}, strikeColor: String, lineCarrier: SVGElement, targetDrawArea:HTMLElement}){
         let line = this.createSVGorPATH({
             givenId: 'line_1',
             qualifiedName: 'line',
             attributes: [
-                {attributeName:"x1", value: 1150},
-                {attributeName:"y1", value: 400},
-                {attributeName:"x2", value: 100},
-                {attributeName:"y2", value: 100},
-                {attributeName:"stroke", value: 'black'},
+                {attributeName:"x1", value: dataObj.from.x},
+                {attributeName:"y1", value: dataObj.from.y},
+                {attributeName:"x2", value: dataObj.to.x},
+                {attributeName:"y2", value: dataObj.to.y},
+                {attributeName:"stroke", value: dataObj.strikeColor},
             ]
         })
-        lineCarrier.appendChild(line);
-        targetDrawArea.insertAdjacentElement('beforeend',lineCarrier);
-
+        dataObj.lineCarrier.appendChild(line);
+        dataObj.targetDrawArea.insertAdjacentElement('beforeEnd', dataObj.lineCarrier);
     },
     getTemplate:{
         "dependency-material-count":(dataObj={count:0})=>{
@@ -1268,6 +1281,19 @@ console.log(this);
         }
 
     },
+    giveThatToDo(dataObj={toDoUUID:String}){
+        if(!dataObj.toDoUUID) return 'uuid bulunamadi';
+        console.log(this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0]);
+        return this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0];
+    },
+    giveTheseDependenciesOfToDo(dataObj={toDoUUID:String ,dependencyType:String}){
+        if(!dataObj.toDoUUID) return 'uuid bulunamadi';
+        if(!dataObj.dependencyType){
+            return this.giveThatToDo({toDoUUID:dataObj.toDoUUID}).dependencies
+        }else{
+            return this.giveThatToDo({toDoUUID:dataObj.toDoUUID}).dependencies.filter(dependency=>dependency.dependencyType===dataObj.dependencyType);
+        }
+    }
 
 
 };

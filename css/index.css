@@ -41,6 +41,7 @@ h2{
     padding: 15px;
     border-radius: 5px;
     background-color: white;
+    z-index: 2;
 }
 .toDoBoxInList:hover{
     background-color: black;
@@ -63,9 +64,15 @@ h2{
     flex-direction: column;
 }
 .toDoDependencyTree{
+    position: relative;
     background-color: lightgray;
     flex-grow: 1;
     flex: auto;
+}
+
+.toDoDependencyTree svg{
+    position:absolute;
+    top:0;
 }
 
 datalist {
@@ -238,6 +245,7 @@ input[type="range"] {
     border:1px solid red;
     background-color: lightyellow;
     border-radius:17px 10px 10px 10px;
+    z-index: 3;
 }
 
 .material-suggestions{

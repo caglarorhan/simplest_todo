@@ -1120,12 +1120,15 @@ console.log(this);
         return theDependencies.filter(dependency=>dependency.dependencyType==="material");
     },
     eraseDependencyTree(dataObj={toDoUUID:String}) {
-        // lineCarrier silinecek, linelar silinecek, material add form aciksa silinecek, diger todoboxlar silinecek
-        document.getElementById("lineCarrier").remove();
+        console.log(dataObj.toDoUUID);
+        // linelar silinecek, material add form aciksa silinecek, diger todoboxlar silinecek
         let dependencies = this.giveTheseDependenciesOfToDo({dependencyType:"todo", toDoUUID: dataObj.toDoUUID});
         if(dependencies.length){
             dependencies.forEach(dependency=>{
                 document.getElementById(dependency.uuid).remove();
+                document.getElementById(`line-${dataObj.toDoUUID}_${dependency.uuid}`).remove();
+                //this.eraseDependencyTree({toDoUUID:dependency.uuid});
+                // TODO: ustteki satiri ekledigimizde 2. katman todo box larda sorun cikiyor.
             })
         }
     },
@@ -1135,12 +1138,18 @@ console.log(this);
         let targetDrawAreaDimensions = this.getCoordinationData(targetDrawArea);
         let positionShiftAmount = 100;
         let boxLayerShiftAmount = 450;
-        let lineCarrier = this.createSVGorPATH({
-            givenId:'lineCarrier', qualifiedName:'svg', attributes:[
-                {attributeName:'viewBox', value: `0 0 ${targetDrawAreaDimensions.width} ${targetDrawAreaDimensions.height}`},
-                {attributeName:'top', value: targetDrawAreaDimensions.top},
-                {attributeName:'left', value: targetDrawAreaDimensions.left}
-            ]})
+        let lineCarrier;
+        if(!document.getElementById("lineCarrier")){
+            lineCarrier = this.createSVGorPATH({
+                givenId:'lineCarrier', qualifiedName:'svg', attributes:[
+                    {attributeName:'viewBox', value: `0 0 ${targetDrawAreaDimensions.width} ${targetDrawAreaDimensions.height}`},
+                    {attributeName:'top', value: targetDrawAreaDimensions.top},
+                    {attributeName:'left', value: targetDrawAreaDimensions.left}
+                ]})
+        }else{
+            lineCarrier = document.getElementById("lineCarrier");
+        }
+
         let dependencyToDos = this.giveTheseDependenciesOfToDo({toDoUUID:dataObj.toDoUUID, dependencyType:'todo'});
         positionShiftAmount = this.getCoordinationData(targetDrawArea).height / dependencyToDos.length;
         dependencyToDos.forEach(dependentToDo=>{

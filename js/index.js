@@ -567,10 +567,17 @@ let simToDo = {
             let bottomButton = this.createElm('button');
             bottomButton.id = `button-bottom-${toDoJob.theToDo.uuid}`;
             bottomButton.classList.add('connectionButton','cB_bottom');
+            toDoBox.dataset.isDependencyTreeOpen='false';
             toDoBox.insertAdjacentElement('beforeend',bottomButton);
             callbacks.push(()=>{this.findDependencyCount({type: 'todo', toDoUUID:toDoJob.theToDo.uuid, targetId:bottomButton.id, titleTemplate:'dependency-todo-count'})});
             bottomButton.addEventListener('click',()=>{
-                this.drawDependencyTree({toDoUUID:toDoJob.theToDo.uuid})
+                if(toDoBox.dataset.isDependencyTreeOpen==='false'){
+                    this.drawDependencyTree({toDoUUID:toDoJob.theToDo.uuid});
+                    toDoBox.dataset.isDependencyTreeOpen='true';
+                }else{
+                    this.eraseDependencyTree({toDoUUID:toDoJob.theToDo.uuid});
+                    toDoBox.dataset.isDependencyTreeOpen='false';
+                }
             })
 
             let rightBottomButton = this.createElm('button');
@@ -1022,8 +1029,13 @@ console.log(callbacks);
         this.saveTheState();
         this.refreshMaterialList({uuid:dataObj.todoUUID});
     },
-    removeMaterialAddingForm(){
-        document.querySelector('[id^="material-add-"]')?.remove();
+    removeMaterialAddingForm(dataObj){
+        console.log(dataObj);
+        if(!dataObj){
+            document.querySelector('[id^="material-add-"]')?.remove();
+        }else{
+            document.getElementById(`material-add-${dataObj.uuid}`).remove();
+        }
     },
     createMaterialAddingForm(event,uuid){
         if(document.getElementById(`material-add-${uuid}`)) return false;
@@ -1044,7 +1056,7 @@ console.log(this);
         document.querySelector(`#material-type-${uuid}`).selectedIndex =0;
 
         document.getElementById(`close-button-${uuid}`).addEventListener('click',()=>{
-            this.removeMaterialAddingForm();
+            this.removeMaterialAddingForm({uuid:uuid});
         })
         document.getElementById(`material-type-${uuid}`).addEventListener('change',()=>{
 
@@ -1107,7 +1119,18 @@ console.log(this);
         let theDependencies = theToDo.dependencies;
         return theDependencies.filter(dependency=>dependency.dependencyType==="material");
     },
+    eraseDependencyTree(dataObj={toDoUUID:String}) {
+        // lineCarrier silinecek, linelar silinecek, material add form aciksa silinecek, diger todoboxlar silinecek
+        document.getElementById("lineCarrier").remove();
+        let dependencies = this.giveTheseDependenciesOfToDo({dependencyType:"todo", toDoUUID: dataObj.toDoUUID});
+        if(dependencies.length){
+            dependencies.forEach(dependency=>{
+                document.getElementById(dependency.uuid).remove();
+            })
+        }
+    },
     drawDependencyTree(dataObj={toDoUUID:String}){
+        //let sourceToDoBox = document.getElementById(dataObj.toDoUUID);
         let targetDrawArea = document.getElementById(conf.toDoDependencyTreeId);
         let targetDrawAreaDimensions = this.getCoordinationData(targetDrawArea);
         let positionShiftAmount = 100;
@@ -1155,9 +1178,11 @@ console.log(this);
 
         this.drawLine({
             from:{
+                uuid: dataObj.firstToDoUUID,
                 x:mainToDosConnectionPointDimensions.left - targetDrawAreaDimensions.left+10,
                 y:mainToDosConnectionPointDimensions.top - targetDrawAreaDimensions.top+10},
             to:{
+                uuid: dataObj.secondToDoUUID,
                 x:dependentToDosConnectionPointDimensions.left - targetDrawAreaDimensions.left+10,
                 y:dependentToDosConnectionPointDimensions.top - targetDrawAreaDimensions.top+10},
             strikeColor:'black',
@@ -1167,7 +1192,7 @@ console.log(this);
     },
     drawLine(dataObj={from:{x:Number, y:Number}, to:{x:Number, y:Number}, strikeColor: String, lineCarrier: SVGElement, targetDrawArea:HTMLElement}){
         let line = this.createSVGorPATH({
-            givenId: 'line_1',
+            givenId: `line-${dataObj.from.uuid}_${dataObj.to.uuid}`,
             qualifiedName: 'line',
             attributes: [
                 {attributeName:"x1", value: dataObj.from.x},

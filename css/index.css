@@ -49,6 +49,13 @@ h2{
     color: white;
     cursor: pointer;
 }
+.toDoBoxInListSmall{
+    position:absolute !important;
+    width: 200px !important;
+    height: 100px;
+    font-size: 10px;
+}
+
 
 .toDoFilterContainer{
     border: 1px solid lightgray;

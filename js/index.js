@@ -228,13 +228,13 @@ let simToDo = {
     },
     createSVGorPATH(dataObj = {givenId:String, qualifiedName:String, attributes:[{attributeName:'', value:''}]}) {
         // {givenId:'', qualifiedName:'', attributes:[{attributeName:'', value:''}]}
-        console.log(dataObj);
+        //console.log(dataObj);
         let nameSpaceURI ='http://www.w3.org/2000/svg';
         let newNSElement = document.createElementNS(nameSpaceURI, dataObj.qualifiedName);
                 newNSElement.id = dataObj.givenId;
                 if(dataObj.attributes.length > 0){
                     dataObj.attributes.forEach(theAttributeObject=>{
-                        console.log(theAttributeObject);
+                      //  console.log(theAttributeObject);
                         newNSElement.setAttribute(theAttributeObject.attributeName, theAttributeObject.value);
                     })
                 }
@@ -605,12 +605,12 @@ let simToDo = {
         //     toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
         // }
 
-
+console.log(callbacks);
         return {theBox: toDoBox, callbacks:callbacks};
     },
     findDependencyCount(dataObj={type:String, toDoUUID:String, targetId:String, titleTemplate:String}){
         // type would be 'todo', 'material'
-        console.log(dataObj)
+        //console.log(dataObj)
         let theCount=0;
         theCount = this.activeState.todos.find(theToDo=>theToDo.uuid===dataObj.toDoUUID).dependencies.filter(dependency=>dependency.dependencyType===dataObj.type).length;
 
@@ -1110,32 +1110,60 @@ console.log(this);
     drawDependencyTree(dataObj={toDoUUID:String}){
         let targetDrawArea = document.getElementById(conf.toDoDependencyTreeId);
         let targetDrawAreaDimensions = this.getCoordinationData(targetDrawArea);
-        let cb_Bottom = document.getElementById(`button-bottom-${dataObj.toDoUUID}`);
-        let cb_BottomDimensions = this.getCoordinationData(cb_Bottom);
+        let positionShiftAmount = 100;
+        let boxLayerShiftAmount = 450;
         let lineCarrier = this.createSVGorPATH({
             givenId:'lineCarrier', qualifiedName:'svg', attributes:[
                 {attributeName:'viewBox', value: `0 0 ${targetDrawAreaDimensions.width} ${targetDrawAreaDimensions.height}`},
-                {attributeName:'top', value: 0},
+                {attributeName:'top', value: targetDrawAreaDimensions.top},
                 {attributeName:'left', value: targetDrawAreaDimensions.left}
             ]})
-        // TODO: bu todo nun dependcyleri icindeki type:todo olanlari kutucuk olarak asagiya koyup cizgilerle baglayacagiz.
         let dependencyToDos = this.giveTheseDependenciesOfToDo({toDoUUID:dataObj.toDoUUID, dependencyType:'todo'});
+        positionShiftAmount = this.getCoordinationData(targetDrawArea).height / dependencyToDos.length;
+        dependencyToDos.forEach(dependentToDo=>{
+            let callbacks=[];
+            let theToDo = this.activeState.todos.filter(todo=>todo.uuid===dependentToDo.uuid)[0];
 
+            callbacks.push(()=>{this.findDependencyCount({
+                type: 'material',
+                toDoUUID:theToDo.uuid,
+                targetId:`button-bottom-${theToDo.uuid}`,
+                titleTemplate:'dependency-material-count'})})
 
+            let newToDoBoxObj = this.printToDo({
+                theToDo:theToDo,
+                rules:{update:false, dependencyButton:true, draggable:false, treeNodeMode: true},
+                callbacks: callbacks
+            });
+            newToDoBoxObj.theBox.classList.add('toDoBoxInListSmall');
+            newToDoBoxObj.theBox.style.left = positionShiftAmount + 'px';
+            newToDoBoxObj.theBox.style.top = boxLayerShiftAmount+ 'px';
+            positionShiftAmount+=300;
 
+            targetDrawArea.appendChild(newToDoBoxObj.theBox);
+            newToDoBoxObj.callbacks.forEach(callback=>callback());
+
+            this.showConnection({firstToDoUUID: dataObj.toDoUUID, secondToDoUUID: dependentToDo.uuid, targetDrawArea: targetDrawArea, lineCarrier:lineCarrier})
+        })
+    },
+    showConnection(dataObj={firstToDoUUID:String, secondToDoUUID:String, targetDrawArea:HTMLElement, lineCarrier: SVGElement}) {
+        let targetDrawAreaDimensions = this.getCoordinationData(dataObj.targetDrawArea);
+        let mainToDosConnectionPoint = document.getElementById(`button-bottom-${dataObj.firstToDoUUID}`);
+        let mainToDosConnectionPointDimensions = this.getCoordinationData(mainToDosConnectionPoint);
+        let dependentToDosConnectionPoint = document.getElementById(`button-top-${dataObj.secondToDoUUID}`);
+        let dependentToDosConnectionPointDimensions = this.getCoordinationData(dependentToDosConnectionPoint);
 
         this.drawLine({
             from:{
-                x:cb_BottomDimensions.left - targetDrawAreaDimensions.left+10,
-                y:cb_BottomDimensions.top - targetDrawAreaDimensions.top+10},
+                x:mainToDosConnectionPointDimensions.left - targetDrawAreaDimensions.left+10,
+                y:mainToDosConnectionPointDimensions.top - targetDrawAreaDimensions.top+10},
             to:{
-                x:100,
-                y:100},
+                x:dependentToDosConnectionPointDimensions.left - targetDrawAreaDimensions.left+10,
+                y:dependentToDosConnectionPointDimensions.top - targetDrawAreaDimensions.top+10},
             strikeColor:'black',
-            lineCarrier: lineCarrier,
-            targetDrawArea: targetDrawArea
+            lineCarrier: dataObj.lineCarrier,
+            targetDrawArea: dataObj.targetDrawArea
         })
-
     },
     drawLine(dataObj={from:{x:Number, y:Number}, to:{x:Number, y:Number}, strikeColor: String, lineCarrier: SVGElement, targetDrawArea:HTMLElement}){
         let line = this.createSVGorPATH({
@@ -1283,7 +1311,7 @@ console.log(this);
     },
     giveThatToDo(dataObj={toDoUUID:String}){
         if(!dataObj.toDoUUID) return 'uuid bulunamadi';
-        console.log(this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0]);
+        //console.log(this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0]);
         return this.activeState.todos.filter(theTodo=>theTodo.uuid===dataObj.toDoUUID)[0];
     },
     giveTheseDependenciesOfToDo(dataObj={toDoUUID:String ,dependencyType:String}){

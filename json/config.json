@@ -4,7 +4,7 @@
   "alternateStyleFile": "simToDo_alternate.css",
   "autoSaveTime": 10,
   "minInputLength": 3,
-  "itemPerPage": 5,
+  "itemPerPage": 4,
   "maxPagingButton": 10,
   "textLabels":{
     "tr":{

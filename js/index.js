@@ -25,7 +25,7 @@ let conf = {
     "alternateStyleFile": "simToDo_alternate.css",
     "autoSaveTime": 10,
     "minInputLength": 3,
-    "itemPerPage": 5,
+    "itemPerPage": 4,
     "maxPagingButton": 10,
     "textLabels": {
         "tr": {
@@ -552,6 +552,7 @@ let simToDo = {
         }
 
         if(toDoJob.rules.treeNodeMode){
+            toDoBox.id = `treeNode-${toDoJob.theToDo.uuid}`;
             toDoBox.style.width=`20vw`;
             toDoBox.style.margin='auto';
             toDoBox.style.position='relative';
@@ -572,11 +573,11 @@ let simToDo = {
             callbacks.push(()=>{this.findDependencyCount({type: 'todo', toDoUUID:toDoJob.theToDo.uuid, targetId:bottomButton.id, titleTemplate:'dependency-todo-count'})});
             bottomButton.addEventListener('click',()=>{
                 if(toDoBox.dataset.isDependencyTreeOpen==='false'){
-                    this.drawDependencyTree({toDoUUID:toDoJob.theToDo.uuid});
                     toDoBox.dataset.isDependencyTreeOpen='true';
+                    this.drawDependencyTree({toDoUUID:toDoJob.theToDo.uuid});
                 }else{
-                    this.eraseDependencyTree({toDoUUID:toDoJob.theToDo.uuid});
                     toDoBox.dataset.isDependencyTreeOpen='false';
+                    this.eraseDependencyTree({toDoUUID:toDoJob.theToDo.uuid});
                 }
             })
 
@@ -612,7 +613,7 @@ let simToDo = {
         //     toDoBox.addEventListener('dragenter', this.dragEnterHandler.bind(this));
         // }
 
-console.log(callbacks);
+//console.log(callbacks);
         return {theBox: toDoBox, callbacks:callbacks};
     },
     findDependencyCount(dataObj={type:String, toDoUUID:String, targetId:String, titleTemplate:String}){
@@ -622,7 +623,7 @@ console.log(callbacks);
         theCount = this.activeState.todos.find(theToDo=>theToDo.uuid===dataObj.toDoUUID).dependencies.filter(dependency=>dependency.dependencyType===dataObj.type).length;
 
         if(document.getElementById(`${dataObj.targetId}`)){
-            console.log('Target var')
+            //console.log('Target var')
             let targetElement = document.getElementById(dataObj.targetId);
             targetElement.textContent= theCount.toString();
             if(!targetElement.classList.contains('hasDependencies')){
@@ -947,7 +948,8 @@ console.log(callbacks);
 
     },
     addDependencyToToDo(dependencyObj={targetUUID:'', dependentData:{}}){
-        //console.log(dependencyObj.targetUUID,':', dependencyObj.dependentData.uuid)
+        console.log(dependencyObj.targetUUID,':', dependencyObj.dependentData.uuid);
+        dependencyObj.targetUUID = dependencyObj.targetUUID.replace('treeNode-','');
         let dependencyType = dependencyObj.dependentData.dependencyType;
         let targetUUID = dependencyObj.targetUUID;
 
@@ -964,6 +966,11 @@ console.log(callbacks);
             }
             if(foundIndexNoInDependencies===-1){
                 dependencies.push(dependencyObj.dependentData);
+                this.findDependencyCount({
+                    type: 'todo',
+                    toDoUUID:dependencyObj.targetUUID,
+                    targetId:`button-bottom-${dependencyObj.targetUUID}`,
+                    titleTemplate:'dependency-todo-count'});
                 this.saveTheState();
             }else{
                 alert('This dependency has already added to this todo!');
@@ -1030,7 +1037,7 @@ console.log(callbacks);
         this.refreshMaterialList({uuid:dataObj.todoUUID});
     },
     removeMaterialAddingForm(dataObj){
-        console.log(dataObj);
+        //console.log(dataObj);
         if(!dataObj){
             document.querySelector('[id^="material-add-"]')?.remove();
         }else{
@@ -1125,19 +1132,25 @@ console.log(this);
         let dependencies = this.giveTheseDependenciesOfToDo({dependencyType:"todo", toDoUUID: dataObj.toDoUUID});
         if(dependencies.length){
             dependencies.forEach(dependency=>{
-                document.getElementById(dependency.uuid).remove();
+                console.log(dependency.uuid, ' silinecek...');
+                document.getElementById(`treeNode-${dependency.uuid}`).remove();
                 document.getElementById(`line-${dataObj.toDoUUID}_${dependency.uuid}`).remove();
                 //this.eraseDependencyTree({toDoUUID:dependency.uuid});
                 // TODO: ustteki satiri ekledigimizde 2. katman todo box larda sorun cikiyor.
+                if(this.giveTheseDependenciesOfToDo({dependencyType:"todo",toDoUUID:dependency.uuid}).length > 0){
+                    this.eraseDependencyTree({toDoUUID:dependency.uuid});
+                }
             })
         }
+        document.getElementById(`treeNode-${dataObj.uuid}`).dataset.isDependencyTreeOpen='false';
     },
     drawDependencyTree(dataObj={toDoUUID:String}){
-        //let sourceToDoBox = document.getElementById(dataObj.toDoUUID);
+        let sourceToDoBox = document.getElementById(`treeNode-${dataObj.toDoUUID}`);
         let targetDrawArea = document.getElementById(conf.toDoDependencyTreeId);
         let targetDrawAreaDimensions = this.getCoordinationData(targetDrawArea);
-        let positionShiftAmount = 100;
-        let boxLayerShiftAmount = 450;
+        let positionShift = 0;
+        let positionShiftAmount;
+        let boxLayerShiftAmount = this.getCoordinationData(sourceToDoBox).top + this.getCoordinationData(sourceToDoBox).height;
         let lineCarrier;
         if(!document.getElementById("lineCarrier")){
             lineCarrier = this.createSVGorPATH({
@@ -1151,7 +1164,12 @@ console.log(this);
         }
 
         let dependencyToDos = this.giveTheseDependenciesOfToDo({toDoUUID:dataObj.toDoUUID, dependencyType:'todo'});
-        positionShiftAmount = this.getCoordinationData(targetDrawArea).height / dependencyToDos.length;
+        // console.log(`Target draw Area width: ${targetDrawAreaDimensions.width}`);
+        // console.log(`Source todobox width:${this.getCoordinationData(sourceToDoBox).width}`);
+        // console.log(`Kac tane alt todo box var: ${dependencyToDos.length}`);
+        // console.log(`Toplam alan genisliginden alt todo sayisi carpi alt todo genisligini cikartinca kalan:${(this.getCoordinationData(targetDrawArea).width - (dependencyToDos.length*200))}`)
+        positionShiftAmount = (this.getCoordinationData(targetDrawArea).width - (dependencyToDos.length*200))/(dependencyToDos.length+1)+200;
+        // console.log(`Her kutu arasindaki shift miktari: ${positionShiftAmount}`);
         dependencyToDos.forEach(dependentToDo=>{
             let callbacks=[];
             let theToDo = this.activeState.todos.filter(todo=>todo.uuid===dependentToDo.uuid)[0];
@@ -1168,9 +1186,9 @@ console.log(this);
                 callbacks: callbacks
             });
             newToDoBoxObj.theBox.classList.add('toDoBoxInListSmall');
-            newToDoBoxObj.theBox.style.left = positionShiftAmount + 'px';
+            newToDoBoxObj.theBox.style.left = positionShift + 'px';
+            positionShift+= positionShiftAmount;
             newToDoBoxObj.theBox.style.top = boxLayerShiftAmount+ 'px';
-            positionShiftAmount+=300;
 
             targetDrawArea.appendChild(newToDoBoxObj.theBox);
             newToDoBoxObj.callbacks.forEach(callback=>callback());

@@ -3,18 +3,19 @@
 // TODO: config.json file applying // DONE
 // TODO: save filter parameters // DONE
 // TODO: Search from saved todos // DONE
+// TODO: Add estimated completing date and time to TODOs // DONE
+// TODO: Styles out to css file // DONE
+// TODO: Material type dependency adding // DONE
+// TODO: Visual representation of dependency relations //DONE
+// TODO: Check all dependencies to make a todo done
 // TODO: Edit old todos
 // TODO: Archiving todos
 // TODO: weekly and monthly summaries
-// TODO: Add estimated completing date and time to TODOs
 // TODO: To set dependency relations (prerequest-postrequest)
 // TODO: Login with & Save to firebase
 // TODO: Share todos with connected friends and sharing, passing, assigning todos to each other
-// TODO: Styles out to css file // DONE
-// TODO: Material type dependency adding
-// TODO: Visual representation of dependency relations
 // TODO: Remove dependency relations
-// TODO: Adding r auto creating tags for ToDos
+// TODO: Adding auto created tags for ToDos
 // TODO: Manage all functions with audio directions
 // TODO: Challenging and gamification adding
 
@@ -535,8 +536,8 @@ let simToDo = {
             theCheckBox.value = theToDo.uuid;
             theCheckBox.type = "checkbox";
             theCheckBox.checked = theToDo.done.toString() === `true`;
-            theCheckBox.addEventListener("click", () => {
-                this.updateToDo({uuid: theToDo.uuid, job: 'update', data: {done: theCheckBox.checked}})
+            theCheckBox.addEventListener("click", (event) => {
+                this.updateToDo({event:event, uuid: theToDo.uuid, job: 'update', data: {done: theCheckBox.checked}})
             })
             toDoBox.appendChild(theCheckBox);
         }
@@ -633,28 +634,55 @@ let simToDo = {
         }
         return theCount;
     },
-    updateToDo(command = {uuid: '', job: 'show', data: {}}) {
-        if (!command.uuid) {
+    updateToDo(dataObj  = {event:Event, uuid: '', job: 'show', data: {}}) {
+        if (!dataObj.uuid) {
             this.giveMessage({type: this.activeState.messageTypes.error, message: 'No uuid provided!'});
             return false;
         }
-        switch (command.job) {
+        switch (dataObj.job) {
             case 'show':
                 break;
             case 'update':
-                //console.log(command);
-                let theTargetIndex = this.activeState.todos.findIndex(todo => todo.uuid === command.uuid);
-                Object.entries(command.data).forEach(([k, v]) => {
-                    //console.log(this.activeState.todos[theTargetIndex][k]);
-                    this.activeState.todos[theTargetIndex][k] = v;
-                    //console.log(this.activeState.todos[theTargetIndex][k]);
+                //console.log(dataObj);
+                let theTargetIndex = this.activeState.todos.findIndex(todo => todo.uuid === dataObj.uuid);
+                Object.entries(dataObj.data).forEach(([k, v]) => {
+                    console.log(k,':',v);
+                    if(k==='done' && v){
+                        dataObj.event.preventDefault();
+                        this.checkAllDependencyRequirements({uuid:dataObj.uuid, data: dataObj.data});
+                    }else{
+                        this.activeState.todos[theTargetIndex][k] = v;
+                        //console.log(this.activeState.todos[theTargetIndex][k]);
+                    }
                 })
                 this.activeState.todos[theTargetIndex].updated = Date.now();
                 this.saveTheState();
                 //console.table(JSON.parse(localStorage.activeState).todos)
                 break;
-
         }
+    },
+    checkAllDependencyRequirements(dataObj={uuid:String, data:{}}){
+        if(!dataObj.uuid || !dataObj.data.done){
+            return `DataObject has not got uuid or data.done property!`;
+        }else{
+            let module = document.getElementById("theModule");
+            module = this.createElm('dialog');
+            module.id = "theModule";
+            let closeModuleButton = this.createElm('button');
+            closeModuleButton.textContent = 'Close';
+            closeModuleButton.id= 'moduleCloseButton';
+
+            module.appendChild(closeModuleButton);
+            module.innerHTML+= this.getTemplate["check-all-dependency-dialog"]({uuid:dataObj.uuid});
+            document.body.insertAdjacentElement('beforeend', module);
+
+            module.showModal();
+            document.getElementById('moduleCloseButton').addEventListener('click', ()=>{
+                module.close();
+                document.getElementById("theModule").remove();
+            })
+        }
+
     },
     createTimeLineDay(movementObj={beginningDate: new Date(),by: 'day', amount:1}){
         let newDay = this.createElm('div');
@@ -1233,6 +1261,9 @@ console.log(this);
         dataObj.targetDrawArea.insertAdjacentElement('beforeEnd', dataObj.lineCarrier);
     },
     getTemplate:{
+        "check-all-dependency-dialog":(dataObj={uuid:String})=>{
+            return `<p>Burada ${dataObj.uuid} ye ait tum todo ve material kontrolleri ve alt todo kontrolleri yapilacak.</p>`;
+        },
         "dependency-material-count":(dataObj={count:0})=>{
             if(dataObj.count===0){
                 return 'Add material dependency to this todo!'

@@ -679,7 +679,26 @@ let simToDo = {
             document.querySelector(`#theModule`).addEventListener('click',(event)=>{
                 let target = event.target;
                 if(target.dataset.type==='todo'){
-                        // dependicies all must be done or obtaned...
+                    event.preventDefault();
+                        // dependencies all must be done or obtained...
+                    // Asagidaki kodlarda sorun var, bir todo icin hic dependency olmasa da tamamlanmamis dependency hatasi veriyor.
+                        let toDoUUID = target.dataset.uuid;
+                        let allIsDone = true;
+                        this.activeState.todos.filter(todo=>todo.uuid===toDoUUID)[0].dependencies.forEach(dependency=>{
+                            console.log('TODO tip dependency',dependency);
+                                if(dependency.dependencyType==='todo'){
+                                    allIsDone = allIsDone && dependency.done;
+                                }else if(dependency.dependencyType==='material'){
+                                    allIsDone = allIsDone && (dependency.isObtained || dependency.pass);
+                                }
+                        })
+                        if(allIsDone){
+                           target.checked=true;
+                        }else{
+                            alert("At least one dependency is not obtained or completed.")
+                        }
+
+
                 }else if(target.dataset.type==='material'){
                     let parentToDoUUID = target.dataset.todoUuid;
                     let materialUUID = target.dataset.uuid;

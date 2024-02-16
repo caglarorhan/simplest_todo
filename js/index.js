@@ -671,18 +671,46 @@ let simToDo = {
             let closeModuleButton = this.createElm('button');
             closeModuleButton.textContent = 'Close';
             closeModuleButton.id= 'moduleCloseButton';
-
             module.appendChild(closeModuleButton);
-            module.innerHTML+= this.getTemplate["check-all-dependency-dialog"]({uuid:dataObj.uuid});
+            let allDependencies = this.getAllDependenciesRecursively({uuid:dataObj.uuid, allDependencies:[]});
+            module.innerHTML+= this.getTemplate["check-all-dependency-dialog"]({uuid:dataObj.uuid, allDependencies:allDependencies});
             document.body.insertAdjacentElement('beforeend', module);
-
             module.showModal();
+            document.querySelector(`#theModule`).addEventListener('click',(event)=>{
+                let target = event.target;
+                if(target.dataset.type==='todo'){
+                        // dependicies all must be done or obtaned...
+                }else if(target.dataset.type==='material'){
+                    let parentToDoUUID = target.dataset.todoUuid;
+                    let materialUUID = target.dataset.uuid;
+                    this.checkMaterialObtained({todoUUID:parentToDoUUID, materialUUID:materialUUID, isObtained: target.checked})
+                }
+            })
             document.getElementById('moduleCloseButton').addEventListener('click', ()=>{
                 module.close();
                 document.getElementById("theModule").remove();
             })
+            //*********************
+            // TODO: Eger tum controller basarili ise check isareti atilip ana todo tamamlanacak.
+            // ******************
         }
 
+    },
+    getAllDependenciesRecursively(dataObj={uuid:String, allDependencies:Array}){
+        console.log(dataObj.uuid)
+        let allDependencies = !dataObj.allDependencies?[]:dataObj.allDependencies;
+
+        let theToDo = this.activeState.todos.filter(todo=>todo.uuid===dataObj.uuid)[0];
+        allDependencies.push(theToDo);
+        theToDo.dependencies.forEach(dependency=>{
+            if(dependency.dependencyType==='material'){
+                dependency.todo_uuid=dataObj.uuid;
+                allDependencies.push(dependency);
+            }else{
+                this.getAllDependenciesRecursively({uuid:dependency.uuid, allDependencies:allDependencies});
+            }
+        })
+        return allDependencies;
     },
     createTimeLineDay(movementObj={beginningDate: new Date(),by: 'day', amount:1}){
         let newDay = this.createElm('div');
@@ -1011,17 +1039,19 @@ let simToDo = {
     },
     refreshMaterialList(dataObj={uuid:String}){
         console.log('DATa OBJ: ',dataObj.uuid);
-        if(!dataObj.uuid) return false;
+        if(!dataObj.uuid || !document.getElementById(`material-list-${dataObj.uuid}`)) return false;
 
-        document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"]({uuid:dataObj.uuid, dependentMaterials: this.giveDependentMaterialList({uuid:dataObj.uuid})});
 
-        document.getElementById(`material-list-${dataObj.uuid}`).addEventListener('click',(event)=>{
-            let srcElm = event.target;
-            if(srcElm.id.includes('material-for-')){
-                let materialUUID = srcElm.id.replace('material-for-','');
-                this.checkMaterialObtained({todoUUID:dataObj.uuid, materialUUID:materialUUID, isObtained: srcElm.checked})
-            }
-        })
+            document.getElementById(`material-list-${dataObj.uuid}`).innerHTML= this.getTemplate["material-in-list"]({uuid:dataObj.uuid, dependentMaterials: this.giveDependentMaterialList({uuid:dataObj.uuid})});
+
+            document.getElementById(`material-list-${dataObj.uuid}`).addEventListener('click',(event)=>{
+                let srcElm = event.target;
+                if(srcElm.id.includes('material-for-')){
+                    let materialUUID = srcElm.id.replace('material-for-','');
+                    this.checkMaterialObtained({todoUUID:dataObj.uuid, materialUUID:materialUUID, isObtained: srcElm.checked})
+                }
+            })
+
 
         document.querySelectorAll('.material-action.pass').forEach(materialPass=>{
             materialPass.addEventListener('click',(event)=>{
@@ -1055,7 +1085,7 @@ let simToDo = {
         this.saveTheState();
         this.refreshMaterialList({uuid: dataObj.toDoUUID})
     },
-    checkMaterialObtained(dataObj={todoUUID:Number, materialUUID:Number, isObtained: Boolean}){
+    checkMaterialObtained(dataObj={todoUUID:String, materialUUID:String, isObtained: Boolean}){
         //console.log(dataObj);
         if(dataObj.todoUUID===0 || dataObj.materialUUID===0) return false;
         console.log(dataObj.isObtained);
@@ -1148,7 +1178,7 @@ console.log(this);
 
 
     },
-    giveDependentMaterialList(dataObj={uuid:null}){
+    giveDependentMaterialList(dataObj={uuid:String}){
         if(!dataObj.uuid){ return false;}
         let theToDo = this.activeState.todos.filter(todo=>todo.uuid ===dataObj.uuid)[0];
         let theDependencies = theToDo.dependencies;
@@ -1261,8 +1291,21 @@ console.log(this);
         dataObj.targetDrawArea.insertAdjacentElement('beforeEnd', dataObj.lineCarrier);
     },
     getTemplate:{
-        "check-all-dependency-dialog":(dataObj={uuid:String})=>{
-            return `<p>Burada ${dataObj.uuid} ye ait tum todo ve material kontrolleri ve alt todo kontrolleri yapilacak.</p>`;
+        "check-all-dependency-dialog":(dataObj={uuid:String, allDependencies:Array})=>{
+            console.log(dataObj.allDependencies);
+            let doneChecklist = '';
+            dataObj.allDependencies.forEach(dependency=>{
+                if(!dependency.dependencyType){
+                    doneChecklist += `<h5 title="${dependency.uuid}"><input type="checkbox" data-type="todo" data-uuid="${dependency.uuid}"> TODO:${dependency.body}</h5>`;
+                }else{
+                    let checkedStatus=dependency.isObtained?`checked="checked"`:'';
+                    doneChecklist += `<li title="${dependency.uuid}"><input type="checkbox" data-type="material" ${checkedStatus} data-uuid="${dependency.uuid}" data-todo-uuid="${dependency.todo_uuid}"> MATERIAL: ${dependency.materialType}:${dependency.materialName}, ${dependency.amount} ${dependency.unit}</li>`;
+                }
+            })
+            return `
+                    <p>Burada ${dataObj.uuid} ye ait tum todo ve material kontrolleri ve alt todo kontrolleri yapilacak.</p>
+                    ${doneChecklist}
+`;
         },
         "dependency-material-count":(dataObj={count:0})=>{
             if(dataObj.count===0){

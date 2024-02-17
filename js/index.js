@@ -981,7 +981,7 @@ let simToDo = {
     dragStartHandler(ev){
         let target = ev.target;
         target.style.cursor= 'grabbing';
-        console.log(`${target.id} nesnesinin dragStart olayi basladi`);
+        //console.log(`${target.id} nesnesinin dragStart olayi basladi`);
         let transferredData = {dependencyType: "todo", uuid: ev.target.id}
         ev.dataTransfer.setData("application/json", JSON.stringify(transferredData));
         //ev.dataTransfer.effectAllowed = "move";
@@ -996,18 +996,18 @@ let simToDo = {
     dragEnterHandler(ev){
         // hedef droppable nesneye ait bir event
         let target = ev.target;
-        console.log(`${target.id} nesnesi bir drop alanina girdi dragEnter tetiklendi.`);
+        //console.log(`${target.id} nesnesi bir drop alanina girdi dragEnter tetiklendi.`);
         target.classList.add('dropZone');
     },
     dragLeaveHandler(ev){
         let target = ev.target;
-        console.log(`${target.id} nesnesi bir drop alanindan cikti dragLeave tetiklendi.`);
+        //console.log(`${target.id} nesnesi bir drop alanindan cikti dragLeave tetiklendi.`);
 
     },
     dropHandler(ev){
         ev.preventDefault();
         let target = ev.target;
-        console.log(`${target.id} nesnesine birsey drop oldu. drop tetiklendi`);
+//        console.log(`${target.id} nesnesine birsey drop oldu. drop tetiklendi`);
         let transferredData = ev.dataTransfer.getData("application/json");
         transferredData = JSON.parse(transferredData);
         let dependencyObj ={targetUUID:target.id.toString(), dependentData:transferredData};
@@ -1019,27 +1019,45 @@ let simToDo = {
         ev.preventDefault();
         let target = ev.target;
         target.classList.add('dragging');
-        console.log(`${target.id} nesnesine ait suruklenme sona erdi dragEnd tetiklendi`);
+        //console.log(`${target.id} nesnesine ait suruklenme sona erdi dragEnd tetiklendi`);
 
     },
-    addDependencyToToDo(dependencyObj={targetUUID:'', dependentData:{}}){
-        console.log(dependencyObj.targetUUID,':', dependencyObj.dependentData.uuid);
+    addDependencyToToDo(dependencyObj={targetUUID:String, dependentData:{}}){
+console.log(dependencyObj)
         dependencyObj.targetUUID = dependencyObj.targetUUID.replace('treeNode-','');
+        dependencyObj.dependentData.uuid = dependencyObj.dependentData.uuid.replace('treeNode-','');
         let dependencyType = dependencyObj.dependentData.dependencyType;
         let targetUUID = dependencyObj.targetUUID;
-
         if(dependencyType==='todo'){
             // {dependencyType: "todo", uuid: ev.target.id}
             let targetToDo = this.activeState.todos.filter(item => item.uuid === targetUUID);
+            if(targetToDo.length===0){
+                alert('Bu To Do task bulunamadi');
+                return false;
+            }
+            // bu id de bir todo bulunduysa onun dependencies dizisi ele alinacak
             let dependencies = targetToDo[0].dependencies;
             let foundIndexNoInDependencies = dependencies.findIndex(dependence => {
                return dependence.dependencyType==='todo' && dependence.uuid===dependencyObj.dependentData.uuid
             })
-            if(dependencyObj.dependentData.uuid===dependencyObj.targetUUID){
+            console.log(foundIndexNoInDependencies);
+
+            if(dependencyObj.dependentData.uuid===dependencyObj.targetUUID ){
                 alert('A todo can not be a dependent of itself!');
                 return false;
             }
+            //-------------
+            console.log(this.activeState.todos);
+            console.log(dependencyObj.targetUUID);
+            console.log(this.activeState.todos.filter(todo=>todo.uuid===dependencyObj.targetUUID)[0]);
+            let targetDependencies = this.activeState.todos.filter(todo=>todo.uuid===dependencyObj.targetUUID)[0].dependencies;
+
+            if(this.isDependencyExist({target:targetDependencies, uuid:dependencyObj.dependentData.uuid})){
+                alert('This dependency has already added to this todo or to any of dependencies of this todo!');
+                return false;
+            }
             if(foundIndexNoInDependencies===-1){
+                //alert('Ekledi AQ!')
                 dependencies.push(dependencyObj.dependentData);
                 this.findDependencyCount({
                     type: 'todo',
@@ -1054,7 +1072,23 @@ let simToDo = {
         }else if(dependencyType==='material'){
 
         }
-
+    },
+    isDependencyExist(dataObj={target:Array, uuid:String}){
+        // [{dependencyType:'', uuid:''},...]
+        let lastResult = false;
+        console.log(dataObj.target, ":::", dataObj.uuid);
+        let isExist = dataObj.target.filter(dep=>dep.uuid===dataObj.uuid && dep.dependencyType==='todo').length;
+        console.log('Lanet olasiis Exist sonucu:', isExist);
+        if(isExist>0){
+            console.log("Evet bu dependency onceden varmis!")
+            lastResult = lastResult || true;
+        }else{
+            dataObj.target.filter(dep=>dep.dependencyType==='todo').forEach(depTypeTodo=>{
+                let newTarget = this.activeState.todos.filter(todo=>todo.uuid===depTypeTodo.uuid)[0];
+                lastResult = lastResult || this.isDependencyExist({target:newTarget.dependencies, uuid: dataObj.uuid})
+            })
+        }
+        return lastResult;
     },
     refreshMaterialList(dataObj={uuid:String}){
         console.log('DATa OBJ: ',dataObj.uuid);
@@ -1210,8 +1244,10 @@ console.log(this);
         if(dependencies.length){
             dependencies.forEach(dependency=>{
                 console.log(dependency.uuid, ' silinecek...');
-                document.getElementById(`treeNode-${dependency.uuid}`).remove();
-                document.getElementById(`line-${dataObj.toDoUUID}_${dependency.uuid}`).remove();
+                if(document.getElementById(`treeNode-${dependency.uuid}`)){
+                    document.getElementById(`treeNode-${dependency.uuid}`).remove();
+                    document.getElementById(`line-${dataObj.toDoUUID}_${dependency.uuid}`).remove();
+                }
                 //this.eraseDependencyTree({toDoUUID:dependency.uuid});
                 // TODO: ustteki satiri ekledigimizde 2. katman todo box larda sorun cikiyor.
                 if(this.giveTheseDependenciesOfToDo({dependencyType:"todo",toDoUUID:dependency.uuid}).length > 0){
@@ -1219,7 +1255,9 @@ console.log(this);
                 }
             })
         }
-        document.getElementById(`treeNode-${dataObj.uuid}`).dataset.isDependencyTreeOpen='false';
+        if(document.getElementById(`treeNode-${dataObj.uuid}`)){
+            document.getElementById(`treeNode-${dataObj.uuid}`).dataset.isDependencyTreeOpen='false';
+        }
     },
     drawDependencyTree(dataObj={toDoUUID:String}){
         let sourceToDoBox = document.getElementById(`treeNode-${dataObj.toDoUUID}`);

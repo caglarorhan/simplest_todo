@@ -523,12 +523,14 @@ let simToDo = {
         let doneStatus = `${theToDo.done.toString() === `true` ? " done" : "not yet"}`
 
         toDoBox.classList.add(conf.toDoBoxInListStyleClass);
+
         toDoBox.innerHTML += theToDo.body;
         toDoBox.innerHTML += '<br>UUID: ' + theToDo.uuid;
         toDoBox.innerHTML += '<br>Intended: ' + intendedDate;
         toDoBox.innerHTML += '<br>Dependencies: ' + dependencies;
         toDoBox.innerHTML += '<br>Created: ' + readableDateData;
-        toDoBox.innerHTML += `<br>Is it done: ${doneStatus}`
+        toDoBox.innerHTML += `<br>Is it done: ${doneStatus}`;
+
 
         if(toDoJob.rules.update){
             toDoBox.innerHTML += '<br>Done:';
@@ -558,6 +560,11 @@ let simToDo = {
             toDoBox.style.margin='auto';
             toDoBox.style.position='relative';
             toDoBox.style.top = '20vh';
+
+            // additional buttons for tree mode
+            toDoBox.innerHTML+= '<br><button class="menu">Add tag</button><button class="menu">GeoTag</button>';
+
+
 
             let topButton = this.createElm('button');
             topButton.id = `button-top-${toDoJob.theToDo.uuid}`;
@@ -733,7 +740,7 @@ let simToDo = {
     },
     createTimeLineDay(movementObj={beginningDate: new Date(),by: 'day', amount:1}){
         let newDay = this.createElm('div');
-        newDay.classList.add('day');
+        newDay.classList.add('day', 'dropdownTrigger');
         //let toDay = new Date();
         let movedDate = this.moveDateBy(movementObj);
         let readableDateOfThatDay = this.createReadableDate({mSeconds: movedDate, plusHourMinute: false});
@@ -742,14 +749,20 @@ let simToDo = {
         newDay.id = `day-${readableDateOfThatDay.toString().replaceAll('.','')}`;
         let todoJobOnThisDay = this.filterTheList({filterParams:{dayId:newDay.id},theList:this.activeState.todos});
         //console.log(`DAYJOB ID: ${newDay.id},  TODO LIST: ${todoJobOnThisDay}`);
+
+        let newUl = this.createElm('ul');
+        newUl.classList.add('dropdownList');
+        newUl.style.display='none';
+        newDay.appendChild(newUl);
+
         if(todoJobOnThisDay.length){
             todoJobOnThisDay.forEach(todo=>{
-                let toDoReCallButton = this.createElm('button');
-                toDoReCallButton.textContent='ReCall';
-                toDoReCallButton.addEventListener('click',()=>{
+                let toDoListItem = this.createElm('li');
+                toDoListItem.textContent=todo.body.substring(0, 10);
+                toDoListItem.addEventListener('click',()=>{
                     this.getDependencyTree(todo);
                 })
-                newDay.appendChild(toDoReCallButton);
+                newUl.appendChild(toDoListItem);
             })
         }
 
@@ -762,7 +775,21 @@ let simToDo = {
             let movementObj = {beginningDate: toDay, by:"day", amount:x};
             //console.log(movementObj);
             let newDay = this.createTimeLineDay(movementObj);
+            newDay.addEventListener('click',(event)=>{
+                let target = event.target;
+                event.preventDefault();
+                let dropDownOfToDoList = target.querySelector(`ul.dropdownList`);
+                if(dropDownOfToDoList.style.display==='block'){
+                    dropDownOfToDoList.style.display='none';
+                }else{
+                    dropDownOfToDoList.style.display='block';
+                    const rect = target.getBoundingClientRect();
+                    dropDownOfToDoList.style.top = rect.bottom + "px";
+                    dropDownOfToDoList.style.left = rect.left + "px";
+                }
+            })
             timeLine.appendChild(newDay);
+
         }
         setTimeout(()=>{
             let readableDateOfToday = this.createReadableDate({mSeconds: new Date().getTime(), plusHourMinute: false});

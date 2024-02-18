@@ -777,6 +777,7 @@ let simToDo = {
             //console.log(movementObj);
             let newDay = this.createTimeLineDay(movementObj);
             newDay.addEventListener('click',(event)=>{
+                document.querySelectorAll(".dropdownList").forEach(dL=>dL.style.display='none');
                 let target = event.target;
                 event.preventDefault();
                 if(!target.classList.contains('day')) return false;

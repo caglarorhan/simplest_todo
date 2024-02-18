@@ -374,23 +374,30 @@ button.menu{
     border-radius: 9px;
 }
 
-.day.dropdownList {
+.day .dropdownList {
+    position: absolute;
+    z-index: 999;
     list-style: none;
     padding: 0;
     margin: 0;
     display: none;
     top: 100%;
     left: 0;
-    width: 100px;
+    width: 200px;
 }
 
-.day.dropdownList li {
-    width: 100px;
+.day .dropdownList li {
+    width: 100%;
     height: 60px;
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     text-align: center;
     line-height: 60px;
+}
+.day .dropdownList li:hover {
+    background-color: black;
+    color:white;
+    cursor: pointer;
 }
 
 .day:has(.dropdownList li) {

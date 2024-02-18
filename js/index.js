@@ -758,7 +758,8 @@ let simToDo = {
         if(todoJobOnThisDay.length){
             todoJobOnThisDay.forEach(todo=>{
                 let toDoListItem = this.createElm('li');
-                toDoListItem.textContent=todo.body.substring(0, 10);
+                toDoListItem.textContent=todo.body.substring(0, 20)+ " ...";
+                toDoListItem.title=todo.body;
                 toDoListItem.addEventListener('click',()=>{
                     this.getDependencyTree(todo);
                 })
@@ -778,7 +779,8 @@ let simToDo = {
             newDay.addEventListener('click',(event)=>{
                 let target = event.target;
                 event.preventDefault();
-                let dropDownOfToDoList = target.querySelector(`ul.dropdownList`);
+                if(!target.classList.contains('day')) return false;
+                let dropDownOfToDoList = target.querySelector(`.dropdownList`);
                 if(dropDownOfToDoList.style.display==='block'){
                     dropDownOfToDoList.style.display='none';
                 }else{
@@ -804,6 +806,7 @@ let simToDo = {
         timeLine.addEventListener("wheel",(event)=>{
             event.preventDefault();
             timeLine.scrollLeft += 3*event.deltaY;
+            document.querySelectorAll(".dropdownList").forEach(dL=>dL.style.display='none');
             if(event.deltaY>0){
                 //console.log('saga donduruldu');
                 let nextDay = this.createTimeLineDay({beginningDate: new Date(),by: 'day',amount:this.timeLineDayLengthForth+1});

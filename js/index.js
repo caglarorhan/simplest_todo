@@ -691,8 +691,10 @@ let simToDo = {
                     // Asagidaki kodlarda sorun var, bir todo icin hic dependency olmasa da tamamlanmamis dependency hatasi veriyor.
                         let toDoUUID = target.dataset.uuid;
                         let allIsDone = true;
+                        console.log(target.dataset.uuid);
                         this.activeState.todos.filter(todo=>todo.uuid===toDoUUID)[0].dependencies.forEach(dependency=>{
                             console.log('TODO tip dependency',dependency);
+                            // peki bu dependency nin orijinal todo su done mi?
                                 if(dependency.dependencyType==='todo'){
                                     allIsDone = allIsDone && dependency.done;
                                 }else if(dependency.dependencyType==='material'){
@@ -777,14 +779,16 @@ let simToDo = {
             //console.log(movementObj);
             let newDay = this.createTimeLineDay(movementObj);
             newDay.addEventListener('click',(event)=>{
-                document.querySelectorAll(".dropdownList").forEach(dL=>dL.style.display='none');
+                document.querySelectorAll(".dropdownList:not([data-is-opened=true])").forEach(dL=>dL.style.display='none');
                 let target = event.target;
                 event.preventDefault();
                 if(!target.classList.contains('day')) return false;
                 let dropDownOfToDoList = target.querySelector(`.dropdownList`);
                 if(dropDownOfToDoList.style.display==='block'){
+                    dropDownOfToDoList.dataset.isOpened ='false';
                     dropDownOfToDoList.style.display='none';
                 }else{
+                    dropDownOfToDoList.dataset.isOpened ='true';
                     dropDownOfToDoList.style.display='block';
                     const rect = target.getBoundingClientRect();
                     dropDownOfToDoList.style.top = rect.bottom + "px";
@@ -1380,6 +1384,7 @@ console.log(this);
     },
     getTemplate:{
         "check-all-dependency-dialog":(dataObj={uuid:String, allDependencies:Array})=>{
+            console.log(dataObj);
             console.log(dataObj.allDependencies);
             let doneChecklist = '';
             dataObj.allDependencies.forEach(dependency=>{

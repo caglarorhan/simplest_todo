@@ -370,6 +370,9 @@ let simToDo = {
         saveToDoButton.addEventListener('click', this.prepareNewToDoObject.bind(this));
     },
     trackSpeechButton(){
+        if(!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)){
+            return false;
+        }
         let isPressed = false;
         let speechButton = document.getElementById('speechToTextSVG');
         let recognition = new this.permissions.speechRecognition();
@@ -642,6 +645,8 @@ let simToDo = {
         return theCount;
     },
     updateToDo(dataObj  = {event:Event, uuid: '', job: 'show', data: {}}) {
+        console.log("updateToDo ya gelen data objesi asagidaki");
+        console.log(dataObj);
         if (!dataObj.uuid) {
             this.giveMessage({type: this.activeState.messageTypes.error, message: 'No uuid provided!'});
             return false;
@@ -656,23 +661,29 @@ let simToDo = {
                     console.log(k,':',v);
                     if(k==='done' && v){
                         dataObj.event.preventDefault();
-                        this.checkAllDependencyRequirements({uuid:dataObj.uuid, data: dataObj.data});
+                        if(this.checkAllDependencyRequirements({uuid:dataObj.uuid, data: dataObj.data})){
+                            this.activeState.todos[theTargetIndex][k] = v;
+                            this.activeState.todos[theTargetIndex].updated = Date.now();
+                            this.saveTheState();
+                        }
                     }else{
                         this.activeState.todos[theTargetIndex][k] = v;
-                        //console.log(this.activeState.todos[theTargetIndex][k]);
+                        this.activeState.todos[theTargetIndex].updated = Date.now();
+                        this.saveTheState();
                     }
                 })
-                this.activeState.todos[theTargetIndex].updated = Date.now();
-                this.saveTheState();
-                //console.table(JSON.parse(localStorage.activeState).todos)
+
                 break;
         }
     },
-    checkAllDependencyRequirements(dataObj={uuid:String, data:{}}){
+    checkAllDependencyRequirements(dataObj={uuid:String, data:Object}){
         if(!dataObj.uuid || !dataObj.data.done){
-            return `DataObject has not got uuid or data.done property!`;
-        }else{
+            this.giveMessage({type:this.activeState.messageTypes.error, message:'No uuid or done status provided!'});
+            return false;
+        }
+
             let module = document.getElementById("theModule");
+            let allIsDone = true;
             module = this.createElm('dialog');
             module.id = "theModule";
             let closeModuleButton = this.createElm('button');
@@ -686,15 +697,8 @@ let simToDo = {
             document.querySelector(`#theModule`).addEventListener('click',(event)=>{
                 let target = event.target;
                 if(target.dataset.type==='todo'){
-                    event.preventDefault();
-                        // dependencies all must be done or obtained...
-                    // Asagidaki kodlarda sorun var, bir todo icin hic dependency olmasa da tamamlanmamis dependency hatasi veriyor.
                         let toDoUUID = target.dataset.uuid;
-                        let allIsDone = true;
-                        console.log(target.dataset.uuid);
                         this.activeState.todos.filter(todo=>todo.uuid===toDoUUID)[0].dependencies.forEach(dependency=>{
-                            console.log('TODO tip dependency',dependency);
-                            // peki bu dependency nin orijinal todo su done mi?
                                 if(dependency.dependencyType==='todo'){
                                     allIsDone = allIsDone && dependency.done;
                                 }else if(dependency.dependencyType==='material'){
@@ -703,7 +707,10 @@ let simToDo = {
                         })
                         if(allIsDone){
                            target.checked=true;
+                            // TODO :debug here - the code above wont work as expected
+                            console.log('Tum dependencyler tam artik update olarak done yapilabilir...')
                         }else{
+                            target.checked=false;
                             alert("At least one dependency is not obtained or completed.")
                         }
 
@@ -721,8 +728,8 @@ let simToDo = {
             //*********************
             // TODO: Eger tum controller basarili ise check isareti atilip ana todo tamamlanacak.
             // ******************
-        }
 
+return allIsDone;
     },
     getAllDependenciesRecursively(dataObj={uuid:String, allDependencies:Array}){
         console.log(dataObj.uuid)
@@ -989,7 +996,7 @@ let simToDo = {
         let currentTime = movement.beginningDate.getTime();
         return currentTime + (24*60*60*1000*dayAmount);
     },
-    giveMessage(messageObject = {type: 'message', message: 'Alright!'}) {
+    giveMessage(messageObject = {type: String, message: String}) {
         switch (messageObject.type) {
             case 'message':
                 console.log(messageObject.message);
@@ -1002,6 +1009,7 @@ let simToDo = {
                 console.log(messageObject.success);
                 break;
         }
+        return true;
     },
     dragHandler(ev){
         ev.preventDefault();

@@ -40,15 +40,17 @@ h2{
     margin-bottom: 5px;
     padding: 15px;
     border-radius: 5px;
-    background-color: white;
+    background-color: lightyellow;
+    color:black;
     z-index: 2;
+    transition: background-color 0.5s cubic-bezier(0.42, 0, 0.58, 1), color 0.5s cubic-bezier(0.42, 0, 0.58, 1);
 }
 .toDoBoxInList:hover{
-    background-color: black;
-    border-color:white;
-    color: white;
+    background-color: lightgreen; /* New background color on hover */
+    color: black; /* Text color on hover */
     cursor: pointer;
 }
+
 .toDoBoxInListSmall{
     position:absolute !important;
     width: 200px !important;

@@ -542,7 +542,8 @@ let simToDo = {
             theCheckBox.type = "checkbox";
             theCheckBox.checked = theToDo.done.toString() === `true`;
             theCheckBox.addEventListener("click", (event) => {
-                this.updateToDo({event:event, uuid: theToDo.uuid, job: 'update', data: {done: theCheckBox.checked}})
+                let target=event.target;
+                 this.updateToDo({target:target, uuid: theToDo.uuid, job: 'update', data: {done: theCheckBox.checked}})
             })
             toDoBox.appendChild(theCheckBox);
         }
@@ -644,8 +645,8 @@ let simToDo = {
         }
         return theCount;
     },
-    updateToDo(dataObj  = {event:Event, uuid: '', job: 'show', data: {}}) {
-        console.log("updateToDo ya gelen data objesi asagidaki");
+    updateToDo(dataObj  = {target:HTMLElement, uuid: String, job: String, data: Object}) {
+        console.log("updateToDo ya gelen data objesi asagidakidir");
         console.log(dataObj);
         if (!dataObj.uuid) {
             this.giveMessage({type: this.activeState.messageTypes.error, message: 'No uuid provided!'});
@@ -659,26 +660,28 @@ let simToDo = {
                 let theTargetIndex = this.activeState.todos.findIndex(todo => todo.uuid === dataObj.uuid);
                 Object.entries(dataObj.data).forEach(([k, v]) => {
                     console.log(k,':',v);
-                    if(k==='done' && v){
-                        dataObj.event.preventDefault();
-                        if(this.checkAllDependencyRequirements({uuid:dataObj.uuid, data: dataObj.data})){
-                            this.activeState.todos[theTargetIndex][k] = v;
-                            this.activeState.todos[theTargetIndex].updated = Date.now();
-                            this.saveTheState();
-                        }
+                    if(k==='done' && v.toString()==='true'){
+                        // done true ise ve yum dependencyler ok ise control penceresi cikacak
+                        dataObj.target.checked=false;
+                        this.checkAllDependencyRequirements({uuid:dataObj.uuid, data: dataObj.data, target:dataObj.target});
+                        return false;
                     }else{
+                        console.log('Done degilmis veya done ve false imis')
                         this.activeState.todos[theTargetIndex][k] = v;
-                        this.activeState.todos[theTargetIndex].updated = Date.now();
-                        this.saveTheState();
+                        let newToDoBox = this.printToDo({theToDo:this.activeState.todos[theTargetIndex], rules:{update:true, dependencyButton:true, treeNodeMode:false, draggable:true}});
+                        let oldToDoBox = document.getElementById(dataObj.uuid);
+                        oldToDoBox.parentNode.replaceChild(newToDoBox.theBox, oldToDoBox);
                     }
+                    this.activeState.todos[theTargetIndex].updated = Date.now();
+                    this.saveTheState();
                 })
-
                 break;
         }
     },
     checkAllDependencyRequirements(dataObj={uuid:String, data:Object}){
-        if(!dataObj.uuid || !dataObj.data.done){
-            this.giveMessage({type:this.activeState.messageTypes.error, message:'No uuid or done status provided!'});
+        console.log(dataObj);
+        if(!dataObj.uuid || !dataObj.data.hasOwnProperty('done')){
+            this.giveMessage({type:this.messageTypes.error, message:'No uuid or done status provided!'});
             return false;
         }
 
@@ -708,7 +711,15 @@ let simToDo = {
                         if(allIsDone){
                            target.checked=true;
                             // TODO :debug here - the code above wont work as expected
-                            console.log('Tum dependencyler tam artik update olarak done yapilabilir...')
+                            console.log('Tum dependencyler tam artik update olarak done yapilabilir...');
+                            let theTargetIndex = this.activeState.todos.findIndex(todo => todo.uuid === dataObj.uuid);
+                            this.activeState.todos[theTargetIndex].done = true;
+                            let newToDoBox = this.printToDo({theToDo:this.activeState.todos[theTargetIndex], rules:{update:true, dependencyButton:true, treeNodeMode:false, draggable:true}});
+                            let oldToDoBox = document.getElementById(dataObj.uuid);
+                            oldToDoBox.parentNode.replaceChild(newToDoBox.theBox, oldToDoBox);
+                            this.activeState.todos[theTargetIndex].updated = Date.now();
+                            this.saveTheState();
+
                         }else{
                             target.checked=false;
                             alert("At least one dependency is not obtained or completed.")

@@ -566,16 +566,28 @@ let simToDo = {
             toDoBox.style.top = '20vh';
 
             // additional buttons for tree mode
-            toDoBox.innerHTML+= '<br><button class="menu">Add tag</button><button class="menu">GeoTag</button>';
+            let newLineBreak = this.createElm('br');
+            toDoBox.appendChild(newLineBreak);
+            let addTagButton = this.createElm('button');
+                    addTagButton.textContent='Add tag';
+                    addTagButton.classList.add('menu');
+                    addTagButton.addEventListener('click',()=>{
 
+                    });
+            let addGeoTagButton = this.createElm('button');
+                    addGeoTagButton.textContent='Add Location';
+                    addGeoTagButton.classList.add('menu');
+                    addGeoTagButton.addEventListener('click',()=>{
 
+                    })
+            toDoBox.appendChild(addTagButton);
+            toDoBox.appendChild(addGeoTagButton);
 
             let topButton = this.createElm('button');
             topButton.id = `button-top-${toDoJob.theToDo.uuid}`;
             topButton.classList.add('connectionButton','cB_top');
             toDoBox.insertAdjacentElement('afterbegin',topButton);
             topButton.title = 'This todo is not a dependency of any!';
-
 
             let bottomButton = this.createElm('button');
             bottomButton.id = `button-bottom-${toDoJob.theToDo.uuid}`;
@@ -685,19 +697,14 @@ let simToDo = {
             return false;
         }
 
-            let module = document.getElementById("theModule");
+            let module = this.createModule({moduleId:'dependencyCheckModule'});
             let allIsDone = true;
-            module = this.createElm('dialog');
-            module.id = "theModule";
-            let closeModuleButton = this.createElm('button');
-            closeModuleButton.textContent = 'Close';
-            closeModuleButton.id= 'moduleCloseButton';
-            module.appendChild(closeModuleButton);
             let allDependencies = this.getAllDependenciesRecursively({uuid:dataObj.uuid, allDependencies:[]});
             module.innerHTML+= this.getTemplate["check-all-dependency-dialog"]({uuid:dataObj.uuid, allDependencies:allDependencies});
-            document.body.insertAdjacentElement('beforeend', module);
-            module.showModal();
-            document.querySelector(`#theModule`).addEventListener('click',(event)=>{
+            module.querySelector('.close-button').addEventListener('click',()=>{
+                module.close();
+            })
+            document.querySelector(`#dependencyCheckModule`).addEventListener('click',(event)=>{
                 let target = event.target;
                 if(target.dataset.type==='todo'){
                         let toDoUUID = target.dataset.uuid;
@@ -732,13 +739,6 @@ let simToDo = {
                     this.checkMaterialObtained({todoUUID:parentToDoUUID, materialUUID:materialUUID, isObtained: target.checked})
                 }
             })
-            document.getElementById('moduleCloseButton').addEventListener('click', ()=>{
-                module.close();
-                document.getElementById("theModule").remove();
-            })
-            //*********************
-            // TODO: Eger tum controller basarili ise check isareti atilip ana todo tamamlanacak.
-            // ******************
 
 return allIsDone;
     },
@@ -1414,7 +1414,7 @@ console.log(this);
                     doneChecklist += `<li title="${dependency.uuid}"><input type="checkbox" data-type="material" ${checkedStatus} data-uuid="${dependency.uuid}" data-todo-uuid="${dependency.todo_uuid}"> MATERIAL: ${dependency.materialType}:${dependency.materialName}, ${dependency.amount} ${dependency.unit}</li>`;
                 }
             })
-            return `
+            return `<button class="close-button">Close</button>
                     <p>Burada ${dataObj.uuid} ye ait tum todo ve material kontrolleri ve alt todo kontrolleri yapilacak.</p>
                     ${doneChecklist}
 `;
@@ -1559,9 +1559,19 @@ console.log(this);
         }else{
             return this.giveThatToDo({toDoUUID:dataObj.toDoUUID}).dependencies.filter(dependency=>dependency.dependencyType===dataObj.dependencyType);
         }
+    },
+    createModule(dataObj={moduleId:String}){
+        if(document.getElementById(dataObj.moduleId)){
+            console.log('Same id already exists, removing old one!');
+            document.getElementById(dataObj.moduleId).remove();
+        }
+        let module = document.getElementById("theModule");
+        module = this.createElm('dialog');
+        module.id = dataObj.moduleId;
+        document.body.insertAdjacentElement('beforeend', module);
+        module.showModal();
+        return module;
     }
-
-
 };
 
 window.addEventListener('DOMContentLoaded', () => {

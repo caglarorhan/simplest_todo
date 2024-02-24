@@ -86,6 +86,7 @@ let simToDo = {
     timeLineDayLengthForth: 15,
     activeState: {
         todos: [],
+        todoTags:["Important", "Grocery", "Work", "Home", "Personal", "Health", "Finance", "Social", "Entertainment", "Education", "Sport", "Travel", "Shopping", "Event", "Other"],
         lang: 'tr',
         currentPage: 1,
         itemPerPage: conf.itemPerPage,
@@ -572,6 +573,23 @@ let simToDo = {
                     addTagButton.textContent='Add tag';
                     addTagButton.classList.add('menu');
                     addTagButton.addEventListener('click',()=>{
+                        let addTagModal = this.createModule({moduleId:'addTagModal'});
+                        addTagModal.innerHTML=this.getTemplate["add-tag-dialog"]({toDoUUID:toDoJob.theToDo.uuid});
+                        addTagModal.querySelector('.close-button').addEventListener('click', ()=>{
+                            addTagModal.close();
+                        })
+
+                        addTagModal.querySelector('#addTagInput').addEventListener('keyup',(event)=>{
+                            let tagSuggestions = this.activeState.todoTags;
+                            console.log(tagSuggestions);
+                        this.createSuggestions({
+                            event:event, positioningTarget: event.target, inputSource: event.target, suggestions: tagSuggestions
+                        });
+                        })
+
+                        addTagModal.querySelector('#addTagButton').addEventListener('click', ()=>{
+                            this.updateToDo({target:event.target, uuid: toDoJob.theToDo.uuid, job: 'update', data: {tags: addTagModal.querySelector('#addTagInput').value}})
+                        })
 
                     });
             let addGeoTagButton = this.createElm('button');
@@ -1402,6 +1420,18 @@ console.log(this);
         dataObj.targetDrawArea.insertAdjacentElement('beforeEnd', dataObj.lineCarrier);
     },
     getTemplate:{
+        "add-tag-dialog":(dataObj={toDoUUID:String})=>{
+            return `
+                <button class="close-button">Close</button>
+                <h3>Add Tag</h3>    
+                Please enter the tag name or select from the list.
+                <div>
+                    <label for="addTagInput">Tag Name:</label>
+                    <input type="text" id="addTagInput">
+                    <button id="addTagButton" data-uuid="${dataObj.toDoUUID}">Add Tag</button>
+                </div>
+            `;
+        },
         "check-all-dependency-dialog":(dataObj={uuid:String, allDependencies:Array})=>{
             console.log(dataObj);
             console.log(dataObj.allDependencies);
@@ -1467,7 +1497,7 @@ console.log(this);
             `;
         }
     },
-    createSuggestions(dataObj={event: {}, positioningTarget:document.body, inputSource:document.body,suggestions:[]}){
+    createSuggestions(dataObj={event: Event, positioningTarget:HTMLElement, inputSource:HTMLElement,suggestions:Array}){
         let positioningTarget = dataObj.positioningTarget;
         let heightOfASuggestionDiv = 25;
         let ev = dataObj.event;
@@ -1527,6 +1557,7 @@ console.log(this);
             //
         }else{
             removeAllSuggestions();
+            console.log(dataObj);
             dataObj.suggestions.forEach(suggestion=>{
                 console.log(suggestion + ' yazildi')
                 let newDiv = this.createElm('div');
